@@ -1,0 +1,60 @@
+
+@font-face {
+    font-family: 'Linjamanka';
+    src: url('../linjalipamanka-normal.woff') format('woff');
+}
+body {
+    font-family: 'Linjamanka';
+}
+.keyboard {
+    display: flex;
+    flex-direction: column;
+}
+.keyrow {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+}
+.multirow_container {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+}
+.key {
+    font-family: 'Linjamanka';
+    font-size: 100%;
+    padding: 0;
+    flex-grow: 1;
+}
+.function_key {
+    background-color: gray;
+    color: white;
+}
+.nimi {
+    display: inline-block;
+    min-width: 1lh;
+    min-height: 1lh;
+    text-align: center;
+    vertical-align: middle;
+    white-space: pre;
+}
+cursor {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    font-family: 'Courier New', Courier, monospace;
+}
+cursor::after {
+    content: '';
+    height: 1lh;
+    border-left: 2px solid black;
+    animation: blink 1s linear infinite;
+}
+@keyframes blink {
+    0%, 100% {
+        border-left: 2px solid black;
+    }
+    50% {
+        border-left: none;
+    }
+}

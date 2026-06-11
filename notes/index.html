@@ -1,0 +1,52 @@
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../keyboard/keyboard.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="../keyboard/keyboard.js"></script>
+    <script src="script.js"></script>
+    <title>ilo sitelen</title>
+</head>
+<body>
+    <header>
+        <button id="new" onclick="newTab();"><span>en</span></button>
+        <!-- <button id="save"><span>sin</span></button> -->
+    </header>
+    <main id="textarea" class="textarea"></main>
+    <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>
+    <script>
+        setKeyboard(document.getElementById('keyboard'), rows);
+        document.getElementById('textarea').addEventListener('click', function(event) {
+            if(event.target == document.getElementById('textarea') && document.getElementById('current_tab') != undefined) {
+                moveCursorInto(document.getElementById('textarea'));
+            }
+        });
+        const request = indexedDB.open("MyDatabase", 1);//Open database
+        request.onerror = (event) => {
+            console.log("Error loading database");
+            document.getElementById('textarea').innerHTML = 'pakala: mi ken ala lukin e lipu.';
+            document.getElementById('new').remove();
+        };
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            const fileStore = db.createObjectStore('files', { autoIncrement: true });
+        };
+        request.onsuccess = (event) => {
+            console.log('Database loaded');
+            const db = event.target.result;
+
+            loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
+
+            document.getElementById('save').addEventListener('click', (event) => {
+                console.log('Saving')
+                saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+                loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
+            });
+            addEventListener("beforeunload", (event) => {
+                saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+            });
+        };
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist();
+        }
+    </script>
+</body>

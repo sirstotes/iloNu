@@ -1,0 +1,79 @@
+/*ff6b6b
+ffe66d*/
+html {
+    overflow: hidden;
+}
+body {
+    margin: 0;
+    background-color: #1a535c;
+    color: #010303;
+    display:flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+header {
+    width: 100%;
+    padding-top:5px;
+    padding-left:5px;
+    display: flex;
+    align-items: stretch;
+    overflow-x:auto;
+    gap:5px;
+    flex-shrink: 0;
+}
+button {
+    border: none;
+    border-radius: 10px;
+    font-family: 'Linjamanka';
+}
+header > button {
+    background-color: #4ecdc4;
+    font-size: 25px;
+    border-radius: 50%;
+    margin-bottom: 5px;
+    width:35px;
+    height:35px;
+}
+.textarea {
+    background-color: #f7fff7;
+    padding: 10px;
+    flex-grow:1;
+    overflow-y: auto;
+}
+.tab {
+    background-color: #4ecdc4;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    display: flex;
+    align-items: center;
+}
+#current_tab {
+    background-color: #f7fff7;
+}
+.tab button {
+    font-size: 25px;
+    background: none;
+    display: flex;
+    justify-content: center;
+}
+#keyboard_container {
+    background-color: #1a535c;
+    flex-basis: 25%;
+    flex-shrink: 0;
+    padding:10px 5px 20px 5px;
+    display:flex;
+    flex-direction: column;
+}
+.keyboard {
+    flex-grow:1;
+}
+.key {
+    background-color: #4ecdc4;
+    margin: 2px;
+}
+.function_key {
+    background-color: #349090;
+    color: #f7fff7;
+}
