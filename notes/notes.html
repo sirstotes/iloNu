@@ -54,6 +54,10 @@
                 <button style="background-color: var(--walo);" onclick="setInputHighlight('var(--walo)')">walo</button>
             </div>
         </div>
+        <span>jelo</span>
+        <button onclick="copySelection()">tu</button>
+        <button onclick="cutSelection()">jo</button>
+        <button onclick="pasteFromClipboard()">pana</button>
     </div>
     <main id="textarea" class="textarea"></main>
     <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>
@@ -91,6 +95,19 @@
                 localStorage.setItem('toolbarHidden', getHidden(document.getElementById('toolbar')));
                 localStorage.setItem('keyboardHidden', getHidden(document.getElementById('keyboard_container')));
             });
+            window.setInterval(() => {
+                if (Array.from(document.getElementsByClassName('tab_name')).some(e => e.style.fontStyle == 'italic')) {
+                    let cursorParent = getCursor().parentElement;
+                    let cursorIndex;
+                    if(cursorParent) {
+                        cursorIndex = Array.from(cursorParent.childNodes).indexOf(getCursor());
+                    }
+                    saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+                    if(cursorParent) {
+                        moveCursorInto(cursorParent, cursorIndex);
+                    }
+                }
+            }, 10000);//Autosave every 60 seconds
         };
         if (navigator.storage && navigator.storage.persist) {
             navigator.storage.persist();
@@ -101,6 +118,9 @@
         setFontSize(localStorage.getItem('fontSize') || 25);
         setHidden(document.getElementById('toolbar'), localStorage.getItem('toolbarHidden') == 'true');
         setHidden(document.getElementById('keyboard_container'), localStorage.getItem('keyboardHidden') == 'true');
+    
+        document.getElementById('settings').style.width = document.getElementById('settings').getBoundingClientRect().height+"px";
+        document.getElementById('new').style.width = document.getElementById('new').getBoundingClientRect().height+"px";
     </script>
     <script>
         if (navigator.serviceWorker) {

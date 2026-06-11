@@ -6,10 +6,19 @@ function switchTab(tab) {
         currentTab.savedData = document.getElementById('textarea').innerHTML;
         currentTab.savedFont = document.getElementById('textarea').style.fontFamily;
         currentTab.id = '';
+        currentTab.getElementsByClassName('tab_erase')[0].remove();
     }
     document.getElementById('textarea').innerHTML = tab.savedData;
     document.getElementById('textarea').style.fontFamily = tab.savedFont || 'inherit';
     tab.id = 'current_tab';
+    let close = document.createElement('button');
+    close.innerHTML = 'weka';
+    close.classList.add('tab_erase');
+    close.style.fontSize = '20px';
+    close.addEventListener('click', function(event) {
+        removeTab(tab);
+    });
+    tab.appendChild(close);
     moveCursorInto(document.getElementById('textarea'));
 }
 function tab(innerHTML) {
@@ -27,19 +36,11 @@ function tab(innerHTML) {
     });
     setupTextarea(name, () => {tab.id == 'current_tab'});
     tab.appendChild(name);
-    let close = document.createElement('button');
-    close.innerHTML = 'weka';
-    close.classList.add('tab_erase');
-    close.style.fontSize = '20px';
-    close.addEventListener('click', function(event) {
-        removeTab(tab);
-    });
-    tab.appendChild(close);
     tab.savedData = '';
     return tab;
 }
 function newTab() {
-    let button = tab('<span>lipu </span>');
+    let button = tab('<span class="nimi">lipu </span>');
     document.getElementById('new').before(button);
     switchTab(button);
 }
@@ -87,13 +88,14 @@ function loadTabs(store, db) {
     };
 }
 function saveTabs(store) {
+    console.log('Saving all files to database.');
     removeCursor();
     removeSelection();
     for(let tab of document.getElementsByClassName('tab')) {
+        tab.getElementsByClassName('tab_name')[0].style.fontStyle = '';
         if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
             const request = store.get(tab.dbID);
             request.onsuccess = (event) => {
-                console.log("Updating entry");
                 const data = event.target.result;
                 data.title = tab.getElementsByTagName('button')[0].innerHTML;
                 if(tab.id == 'current_tab') {
@@ -105,7 +107,6 @@ function saveTabs(store) {
                 const requestUpdate = store.put(data, tab.dbID);
             }
         } else {//Otherwise create a new entry
-            console.log("New entry");
             if(tab.id == 'current_tab') {
                 tab.savedData = document.getElementById('textarea').innerHTML;
                     tab.savedFont = document.getElementById('textarea').style.fontFamily;
@@ -177,8 +178,48 @@ function setInputHighlight(color) {
         e.style.backgroundColor = color;
     }
 }
+function copySelection() {
+    if(document.getElementsByClassName('selected').length > 0) {
+        navigator.clipboard.writeText(Array.from(document.getElementsByClassName('selected')).reduce((t, e) => {
+            let c = e.cloneNode(true);
+            c.classList.remove('selected');
+            return t + c.outerHTML;
+        }, ''));
+    }
+}
+function cutSelection() {
+    copySelection();
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 0) {
+        moveCursorAfter(selection[0]);
+        for(let i = 0; i < selection.length; i ++) {
+            selection[i].remove();
+        }
+    }
+}
+async function pasteFromClipboard() {
+    let text = await navigator.clipboard.readText();
+    let div = document.createElement('div');
+    div.innerHTML = text;
+    let elements = Array.from(div.children);
+
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 0) {
+        moveCursorAfter(selection[0]);
+        for(let i = 0; i < selection.length; i ++) {
+            selection[i].remove();
+        }
+    }
+    for(let element of elements) {
+        getCursor().before(element);
+    }
+}
 
 document.addEventListener('wordTyped', (event) => {
     event.detail.span.style.color = getInputColor();
     event.detail.span.style.backgroundColor = getInputHighlight();
+});
+
+document.addEventListener('wordsChanged', (event) => {
+    document.getElementById('current_tab').getElementsByClassName('tab_name')[0].style.fontStyle = 'italic';
 });

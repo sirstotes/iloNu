@@ -21,20 +21,30 @@ function type(word) {
         }
         moveCursorAfter(span);
     } else {
-        if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
+        if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == ' ') {
             getCursor().nextElementSibling.remove();
         }
         getCursor().before(span);
     }
-    const customEvent = new CustomEvent('wordTyped', {
-        detail: {span: span},
+    const customEvent = new CustomEvent('wordsChanged', {
         bubbles: true,
         cancelable: true
     });
     span.dispatchEvent(customEvent);
+    const customEvent2 = new CustomEvent('wordTyped', {
+        detail: {span: span},
+        bubbles: true,
+        cancelable: true
+    });
+    span.dispatchEvent(customEvent2);
     return span;
 }
 function backspace() {
+    const customEvent = new CustomEvent('wordsChanged', {
+        bubbles: true,
+        cancelable: true
+    });
+    document.dispatchEvent(customEvent);
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length > 0) {
         moveCursorAfter(selection[0]);
@@ -46,6 +56,11 @@ function backspace() {
     }
 }
 function newLine() {
+    const customEvent = new CustomEvent('wordsChanged', {
+        bubbles: true,
+        cancelable: true
+    });
+    document.dispatchEvent(customEvent);
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length > 0) {
         moveCursorAfter(selection[0]);
@@ -78,7 +93,11 @@ function moveCursorInto(element) {
         }
         cursor.parentElement.removeChild(cursor);
     }
-    element.appendChild(cursor);
+    if(arguments[1] != undefined) {
+        element.childNodes[arguments[1] - 1].after(cursor);
+    } else {
+        element.appendChild(cursor);
+    }
 }
 function afterClick(button) {
     for(let m of document.getElementsByClassName('multirow')) {
@@ -216,7 +235,6 @@ function setupTextarea(element, checkValidFunction) {
         }
     });
     element.addEventListener('pointerdown', function(event) {
-        console.log("pointer down!")
         if(checkValidFunction()) {
             if(event.target.classList.contains('nimi')) {
                 element.selectStart = event.target;
@@ -225,7 +243,6 @@ function setupTextarea(element, checkValidFunction) {
         }
     });
     element.addEventListener('pointerup', function(event) {
-        console.log('pointer up')
         element.mouseDown = false;
     });
     element.addEventListener('pointermove', function(event) {
