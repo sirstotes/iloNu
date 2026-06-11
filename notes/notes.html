@@ -83,7 +83,7 @@
                     loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
                 });
             }
-            addEventListener("beforeunload", (event) => {
+            window.addEventListener("beforeunload", (event) => {
                 saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
                 localStorage.setItem('darkMode', getDarkMode());
                 localStorage.setItem('siteFont', getWebsiteFont());
