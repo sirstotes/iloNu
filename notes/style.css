@@ -71,6 +71,8 @@ button {
     padding: 5px;
     border-bottom: 2px solid var(--secondary-button-color);
     overflow-x: auto;
+    overflow-y: visible;
+    display: flex;
     button {
         border-radius: 2px;
         font-size: 20px;
@@ -116,6 +118,10 @@ button {
     flex-grow:1;
     overflow-y: auto;
     font-size: var(--font-size);
+    touch-action: none;
+    span {
+        touch-action: none;
+    }
 }
 .tab {
     background-color: var(--button-color);

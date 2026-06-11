@@ -1,0 +1,22 @@
+{
+  "name": "ilo Nu",
+  "short_name": "NU",
+  "description": "ilo lipu kepeken sitelen pona taso",
+  "scope": "/iloNu/",
+  "start_url": "https://sirstotes.github.io/iloNu/notes/notes.html",
+  "background_color": "#1e152a",
+  "theme_color": "#1e152a",
+  "display": "fullscreen", 
+  "icons": [
+      {
+        "src": "images/icon192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "images/icon512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+  ]
+}

@@ -216,6 +216,7 @@ function setupTextarea(element, checkValidFunction) {
         }
     });
     element.addEventListener('pointerdown', function(event) {
+        console.log("pointer down!")
         if(checkValidFunction()) {
             if(event.target.classList.contains('nimi')) {
                 element.selectStart = event.target;
@@ -224,18 +225,23 @@ function setupTextarea(element, checkValidFunction) {
         }
     });
     element.addEventListener('pointerup', function(event) {
+        console.log('pointer up')
         element.mouseDown = false;
     });
     element.addEventListener('pointermove', function(event) {
         if(checkValidFunction()) {
             if(element.mouseDown && element.selectStart != undefined) {
-                if(event.target.classList.contains('nimi')) {
-                    element.selectEnd = event.target;
+                let target = event.target;
+                if(target == element.selectStart) {
+                    target = document.elementFromPoint(event.clientX, event.clientY);
+                }
+                if(target.classList.contains('nimi')) {
+                    element.selectEnd = target;
                     element.selecting = true;
                     removeSelection();
                     calculateSelection(element, element.selectStart, element.selectEnd);
                 } else {
-                    element.selectEnd = event.target;
+                    element.selectEnd = target;
                     element.selecting = true;
                     removeSelection();
                     calculateSelection(element, element.selectStart, -1);

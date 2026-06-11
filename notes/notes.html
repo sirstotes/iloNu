@@ -5,7 +5,10 @@
     <link rel="stylesheet" href="style.css">
     <script src="../keyboard/keyboard.js"></script>
     <script src="script.js"></script>
-    <title>ilo sitelen</title>
+    <title>ilo Nu</title>
+    <link rel="icon" href="../images/icon192.png" type="image/x-icon">
+    <link rel="canonical" href="https://sirstotes.github.io/iloNu/">
+    <link rel="manifest" href="../manifest.json">
 </head>
 <body>
     <header>
@@ -98,5 +101,13 @@
         setFontSize(localStorage.getItem('fontSize') || 25);
         setHidden(document.getElementById('toolbar'), localStorage.getItem('toolbarHidden') == 'true');
         setHidden(document.getElementById('keyboard_container'), localStorage.getItem('keyboardHidden') == 'true');
+    </script>
+    <script>
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.register (
+            '/iloNu/sw.js',
+            {scope: '/iloNu/'}
+          )
+        }
     </script>
 </body>
