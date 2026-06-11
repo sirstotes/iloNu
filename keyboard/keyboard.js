@@ -13,22 +13,52 @@ function removeCursor() {
 function type(word) {
     let span = document.createElement('span');
     span.innerHTML = word;// + ' ';
-    if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
-        getCursor().nextElementSibling.remove();
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 0) {
+        selection[0].replaceWith(span);
+        for(let i = 1; i < selection.length; i ++) {
+            selection[i].remove();
+        }
+        moveCursorAfter(span);
+    } else {
+        if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
+            getCursor().nextElementSibling.remove();
+        }
+        getCursor().before(span);
     }
-    getCursor().before(span);
+    const customEvent = new CustomEvent('wordTyped', {
+        detail: {span: span},
+        bubbles: true,
+        cancelable: true
+    });
+    span.dispatchEvent(customEvent);
     return span;
 }
 function backspace() {
-    if(getCursor().previousElementSibling) {
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 0) {
+        moveCursorAfter(selection[0]);
+        for(let i = 0; i < selection.length; i ++) {
+            selection[i].remove();
+        }
+    } else if(getCursor().previousElementSibling) {
         getCursor().previousElementSibling.remove();
     }
 }
 function newLine() {
-    if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
-        getCursor().nextElementSibling.remove();
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 0) {
+        moveCursorAfter(selection[0]);
+        selection[0].replaceWith(document.createElement('br'));
+        for(let i = 1; i < selection.length; i ++) {
+            selection[i].remove();
+        }
+    } else {
+        if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
+            getCursor().nextElementSibling.remove();
+        }
+        getCursor().before(document.createElement('br'));
     }
-    getCursor().before(document.createElement('br'));
 }
 function moveCursorAfter(element) {
     let cursor = getCursor();
@@ -153,13 +183,63 @@ function setKeyboard(keyboard, rows) {
         keyboard.appendChild(row);
     }
 }
+function removeSelection() {
+    let allSelected = Array.from(document.getElementsByClassName('selected'));
+    for(let selected of allSelected) {
+        selected.classList.remove('selected');
+    }
+}
+function selectElements(parent, startIndex, endIndex) {
+    for(let i = startIndex; i < endIndex + 1; i ++) {
+        parent.children[i].classList.add('selected');
+    }
+    removeCursor();
+}
+function calculateSelection(parentElement, startElement, endElement) {
+    let sIndex = (startElement == 0) ? 0 : Array.prototype.indexOf.call(parentElement.children, startElement);
+    let eIndex = (endElement == -1) ? parentElement.children.length - 1 : Array.prototype.indexOf.call(parentElement.children, endElement);
+    selectElements(parentElement, Math.min(sIndex, eIndex), Math.max(sIndex, eIndex));
+}
 function setupTextarea(element, checkValidFunction) {
     element.addEventListener('click', function(event) {
         if(checkValidFunction()) {
-            if(event.target == element) {
-                moveCursorInto(element);
-            } else if(event.target.classList.contains('nimi')) {
-                moveCursorAfter(event.target);
+            if(element.selecting) {
+                element.selecting = false;
+            } else {
+                removeSelection();
+                if(event.target == element) {
+                    moveCursorInto(element);
+                } else if(event.target.classList.contains('nimi')) {
+                    moveCursorAfter(event.target);
+                }
+            }
+        }
+    });
+    element.addEventListener('pointerdown', function(event) {
+        if(checkValidFunction()) {
+            if(event.target.classList.contains('nimi')) {
+                element.selectStart = event.target;
+                element.mouseDown = true;
+            }
+        }
+    });
+    element.addEventListener('pointerup', function(event) {
+        element.mouseDown = false;
+    });
+    element.addEventListener('pointermove', function(event) {
+        if(checkValidFunction()) {
+            if(element.mouseDown && element.selectStart != undefined) {
+                if(event.target.classList.contains('nimi')) {
+                    element.selectEnd = event.target;
+                    element.selecting = true;
+                    removeSelection();
+                    calculateSelection(element, element.selectStart, element.selectEnd);
+                } else {
+                    element.selectEnd = event.target;
+                    element.selecting = true;
+                    removeSelection();
+                    calculateSelection(element, element.selectStart, -1);
+                }
             }
         }
     });

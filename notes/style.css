@@ -13,9 +13,16 @@
     --toolbar-button-hover-color: light-dark(#f7fff7, #426161);
     --red-accent-color: #ff6b6b;
     --yellow-accent-color: #ffe66d;
-
+    
+    --loje: #ff6b6b;
+    --jelo: #ffe66d;
+    --laso: #4ecdc4;
+    --pimeja: #010303;
+    --walo: #f7fff7;
+    
     --font-size: 25px;
     --input-text-color: var(--text-color);
+    --input-highlight-color: var(--text-color);
 }
 html {
     overflow: hidden;
@@ -100,7 +107,7 @@ button {
     position: absolute;
     button {
         display: block;
-        width: 100px;
+        width: 100%;
     }
 }
 .textarea {
@@ -225,4 +232,7 @@ cursor::after {
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+.selected {
+    background-color: var(--yellow-accent-color) !important;
 }

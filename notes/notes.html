@@ -29,15 +29,28 @@
         <span>lipu</span>
         <button onclick="decreaseFontSize()">lili</button>
         <button onclick="increaseFontSize()">suli</button>
-        <!-- <div class="dropdown">
-            <button>nasin linja</button>
+        <div class="dropdown">
+            <button id="input-color-preview" onclick="setInputColor(getInputColor())">kule linja</button>
             <div class="dropdown-content">
-                <button style="font-family: 'Linjamanka';" onclick="setDocumentFont('Linjamanka')">linja lipamanka</button>
-                <button style="font-family: 'Fairfax';" onclick="setDocumentFont('Fairfax')">Fairfax</button>
-                <button style="font-family: 'Fairfax HD';" onclick="setDocumentFont('Fairfax HD')">FairfaxHD</button>
-                <button style="font-family: 'nasin nanpa';" onclick="setDocumentFont('nasin nanpa')">nasin nanpa</button>
+                <button onclick="setInputColor('')">ala</button>
+                <button style="color: var(--loje);" onclick="setInputColor('var(--loje)')">loje</button>
+                <button style="color: var(--jelo);" onclick="setInputColor('var(--jelo)')">jelo</button>
+                <button style="color: var(--laso);" onclick="setInputColor('var(--laso)')">laso</button>
+                <button style="color: var(--pimeja);" onclick="setInputColor('var(--pimeja)')">pimeja</button>
+                <button style="color: var(--walo);" onclick="setInputColor('var(--walo)')">walo</button>
             </div>
-        </div> -->
+        </div>
+        <div class="dropdown">
+            <button id="input-highlight-preview" onclick="setInputHighlight(getInputHighlight())">kule monsi</button>
+            <div class="dropdown-content">
+                <button onclick="setInputHighlight('')">ala</button>
+                <button style="background-color: var(--loje);" onclick="setInputHighlight('var(--loje)')">loje</button>
+                <button style="background-color: var(--jelo);" onclick="setInputHighlight('var(--jelo)')">jelo</button>
+                <button style="background-color: var(--laso);" onclick="setInputHighlight('var(--laso)')">laso</button>
+                <button style="background-color: var(--pimeja);color:var(--walo);" onclick="setInputHighlight('var(--pimeja)')">pimeja</button>
+                <button style="background-color: var(--walo);" onclick="setInputHighlight('var(--walo)')">walo</button>
+            </div>
+        </div>
     </div>
     <main id="textarea" class="textarea"></main>
     <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>

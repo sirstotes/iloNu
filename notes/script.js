@@ -2,6 +2,7 @@ function switchTab(tab) {
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
         removeCursor();
+        removeSelection();
         currentTab.savedData = document.getElementById('textarea').innerHTML;
         currentTab.savedFont = document.getElementById('textarea').style.fontFamily;
         currentTab.id = '';
@@ -87,6 +88,7 @@ function loadTabs(store, db) {
 }
 function saveTabs(store) {
     removeCursor();
+    removeSelection();
     for(let tab of document.getElementsByClassName('tab')) {
         if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
             const request = store.get(tab.dbID);
@@ -155,3 +157,28 @@ function setDarkMode(bool) {
 function toggleDarkMode() {
     setDarkMode(!getDarkMode());
 }
+function getInputColor() {
+    return document.documentElement.style.getPropertyValue("--input-text-color");
+}
+function setInputColor(color) {
+    document.documentElement.style.setProperty("--input-text-color", color);
+    document.getElementById('input-color-preview').style.color = color;
+    for(let e of document.getElementsByClassName('selected')) {
+        e.style.color = color;
+    }
+}
+function getInputHighlight() {
+    return document.documentElement.style.getPropertyValue("--input-highlight-color");
+}
+function setInputHighlight(color) {
+    document.documentElement.style.setProperty("--input-highlight-color", color);
+    document.getElementById('input-highlight-preview').style.backgroundColor = color;
+    for(let e of document.getElementsByClassName('selected')) {
+        e.style.backgroundColor = color;
+    }
+}
+
+document.addEventListener('wordTyped', (event) => {
+    event.detail.span.style.color = getInputColor();
+    event.detail.span.style.backgroundColor = getInputHighlight();
+});
