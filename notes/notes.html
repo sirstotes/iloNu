@@ -1,5 +1,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../fonts/fonts.css">
     <link rel="stylesheet" href="../keyboard/keyboard.css">
     <link rel="stylesheet" href="style.css">
     <script src="../keyboard/keyboard.js"></script>
@@ -8,18 +9,41 @@
 </head>
 <body>
     <header>
-        <button id="new" onclick="newTab();"><span>en</span></button>
+        <button id="settings" onclick="toggleHidden(document.getElementById('toolbar'))">ilo</button>
+        <button id="new" onclick="newTab();">en</button>
         <!-- <button id="save"><span>sin</span></button> -->
     </header>
+    <div id="toolbar" class="toolbar">
+        <span>ale</span>
+        <button onclick="toggleDarkMode()">suno</button>
+        <div class="dropdown">
+            <button>nasin linja</button>
+            <div class="dropdown-content">
+                <button style="font-family: 'Linjamanka';" onclick="setWebsiteFont('Linjamanka')">linja lipamanka</button>
+                <button style="font-family: 'Fairfax';" onclick="setWebsiteFont('Fairfax')">Fairfax</button>
+                <button style="font-family: 'Fairfax HD';" onclick="setWebsiteFont('Fairfax HD')">FairfaxHD</button>
+                <button style="font-family: 'nasin nanpa';" onclick="setWebsiteFont('nasin nanpa')">nasin nanpa</button>
+            </div>
+        </div>
+        <button onclick="toggleHidden(document.getElementById('keyboard_container'))">nena</button>
+        <span>lipu</span>
+        <button onclick="decreaseFontSize()">lili</button>
+        <button onclick="increaseFontSize()">suli</button>
+        <!-- <div class="dropdown">
+            <button>nasin linja</button>
+            <div class="dropdown-content">
+                <button style="font-family: 'Linjamanka';" onclick="setDocumentFont('Linjamanka')">linja lipamanka</button>
+                <button style="font-family: 'Fairfax';" onclick="setDocumentFont('Fairfax')">Fairfax</button>
+                <button style="font-family: 'Fairfax HD';" onclick="setDocumentFont('Fairfax HD')">FairfaxHD</button>
+                <button style="font-family: 'nasin nanpa';" onclick="setDocumentFont('nasin nanpa')">nasin nanpa</button>
+            </div>
+        </div> -->
+    </div>
     <main id="textarea" class="textarea"></main>
     <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>
     <script>
-        setKeyboard(document.getElementById('keyboard'), rows);
-        document.getElementById('textarea').addEventListener('click', function(event) {
-            if(event.target == document.getElementById('textarea') && document.getElementById('current_tab') != undefined) {
-                moveCursorInto(document.getElementById('textarea'));
-            }
-        });
+        setKeyboard(document.getElementById('keyboard'), UCSURRows);
+        setupTextarea(document.getElementById('textarea'), () => document.getElementById('current_tab') != undefined);
         const request = indexedDB.open("MyDatabase", 1);//Open database
         request.onerror = (event) => {
             console.log("Error loading database");
@@ -36,17 +60,30 @@
 
             loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
 
-            document.getElementById('save').addEventListener('click', (event) => {
-                console.log('Saving')
-                saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
-                loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
-            });
+            if(document.getElementById('save') != undefined) {
+                document.getElementById('save').addEventListener('click', (event) => {
+                    console.log('Saving')
+                    saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+                    loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
+                });
+            }
             addEventListener("beforeunload", (event) => {
                 saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+                localStorage.setItem('darkMode', getDarkMode());
+                localStorage.setItem('siteFont', getWebsiteFont());
+                localStorage.setItem('fontSize', getFontSize());
+                localStorage.setItem('toolbarHidden', getHidden(document.getElementById('toolbar')));
+                localStorage.setItem('keyboardHidden', getHidden(document.getElementById('keyboard_container')));
             });
         };
         if (navigator.storage && navigator.storage.persist) {
             navigator.storage.persist();
         }
+
+        setDarkMode(localStorage.getItem('darkMode') == 'true');
+        setWebsiteFont(localStorage.getItem('siteFont') || 'Linjamanka')
+        setFontSize(localStorage.getItem('fontSize') || 25);
+        setHidden(document.getElementById('toolbar'), localStorage.getItem('toolbarHidden') == 'true');
+        setHidden(document.getElementById('keyboard_container'), localStorage.getItem('keyboardHidden') == 'true');
     </script>
 </body>

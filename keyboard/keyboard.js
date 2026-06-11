@@ -12,7 +12,7 @@ function removeCursor() {
 }
 function type(word) {
     let span = document.createElement('span');
-    span.innerHTML = word + ' ';
+    span.innerHTML = word;// + ' ';
     if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
         getCursor().nextElementSibling.remove();
     }
@@ -65,9 +65,6 @@ function key(nimi) {
     button.onclick = (event) => {
         let n = type(nimi);
         addClass(n, 'nimi');
-        n.onclick = (event) => {
-            moveCursorAfter(n);
-        };
         afterClick(button);
     };
     return button;
@@ -87,9 +84,6 @@ function cartoucheKey() {
         let cartouche = type('[');
         cartouche.isCartouche = true;
         addClass(cartouche, 'nimi');
-        cartouche.onclick = (event) => {
-            moveCursorAfter(cartouche);
-        };
         cartouche.endCartouche = function() {
             moveCursorAfter(cartouche);
             cartouche.innerHTML = cartouche.innerText+']';
@@ -159,7 +153,18 @@ function setKeyboard(keyboard, rows) {
         keyboard.appendChild(row);
     }
 }
-let rows = [keyboardRow('la', 'en', 'li', 'o', 'e', 'pi', 'ala', 'seme', functionKey('o weka', backspace)),
+function setupTextarea(element, checkValidFunction) {
+    element.addEventListener('click', function(event) {
+        if(checkValidFunction()) {
+            if(event.target == element) {
+                moveCursorInto(element);
+            } else if(event.target.classList.contains('nimi')) {
+                moveCursorAfter(event.target);
+            }
+        }
+    });
+}
+let latinRows = [keyboardRow('la', 'en', 'li', 'o', 'e', 'pi', 'ala', 'seme', functionKey('o weka', backspace)),
             keyboardRow('mi', 'sina', 'ona', 'ni', 'lon', 'tawa', 'tan', 'kepeken', 'sama'),
             multiRow([keyboardRow(functionKey('A', multiRowGoTo(2, 1)), functionKey('E', multiRowGoTo(3, 1)), functionKey('I', multiRowGoTo(4, 1)), functionKey('J', multiRowGoTo(5, 1)), functionKey('K', multiRowGoTo(6)), functionKey('L', multiRowGoTo(8)), functionKey('M', multiRowGoTo(10))),
                     keyboardRow(functionKey('N', multiRowGoTo(12, 1)), functionKey('O', multiRowGoTo(13, 1)), functionKey('P', multiRowGoTo(14)), functionKey('S', multiRowGoTo(16)), functionKey('T', multiRowGoTo(18, 1)), functionKey('U', multiRowGoTo(19, 1)), functionKey('W', multiRowGoTo(20, 1))),
@@ -182,4 +187,28 @@ let rows = [keyboardRow('la', 'en', 'li', 'o', 'e', 'pi', 'ala', 'seme', functio
                     keyboardRow('tan', 'taso', 'tawa', 'telo', 'tenpo', 'toki', 'tomo', 'tonsi', 'tu'),
                     keyboardRow('unpa', 'uta', 'utala'),
                     keyboardRow('walo', 'wan', 'waso', 'wawa', 'weka', 'wile')], 2, false, true),
-            keyboardRow(cartoucheKey(), '{', '}', 'te', 'to', '_', ':', '.', functionKey('linja sin', newLine))];
+            keyboardRow(cartoucheKey(), '{', '}', 'te', 'to', ' ', ':', '.', functionKey('linja sin', newLine))];
+let UCSURRows = [keyboardRow('󱤡', '󱤊', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '󱥙', functionKey('󱥄​󱥶', backspace)),
+            keyboardRow('󱤴', '󱥞', '󱥆', '󱥁', '󱤬', '󱥩', '󱥧', '󱤙', '󱥖'),
+            multiRow([keyboardRow(functionKey('A', multiRowGoTo(2, 1)), functionKey('E', multiRowGoTo(3, 1)), functionKey('I', multiRowGoTo(4, 1)), functionKey('J', multiRowGoTo(5, 1)), functionKey('K', multiRowGoTo(6)), functionKey('L', multiRowGoTo(8)), functionKey('M', multiRowGoTo(10))),
+                    keyboardRow(functionKey('N', multiRowGoTo(12, 1)), functionKey('O', multiRowGoTo(13, 1)), functionKey('P', multiRowGoTo(14)), functionKey('S', multiRowGoTo(16)), functionKey('T', multiRowGoTo(18, 1)), functionKey('U', multiRowGoTo(19, 1)), functionKey('W', multiRowGoTo(20, 1))),
+                    keyboardRow('󱤀', '󱤁', '󱤂', '󱤃', '󱤄', '󱤅', '󱤆', '󱤇', '󱤈'), 
+                    keyboardRow('󱤉', '󱤊', '󱤋'),
+                    keyboardRow('󱤌', '󱤍', '󱤎', '󱤏'),
+                    keyboardRow('󱤐', '󱤑', '󱤒', '󱤓'), 
+                    keyboardRow('󱤔', '󱤕', '󱤖', '󱤗', '󱤘', '󱤙', '󱦀'),
+                    keyboardRow('󱤚', '󱥹', '󱤛', '󱤜', '󱤝', '󱤞', '󱤟', '󱤠'),
+                    keyboardRow('󱤡', '󱤢', '󱤣', '󱤤', '󱥼', '󱤥', '󱤦', '󱤧'),
+                    keyboardRow('󱤨', '󱤩', '󱤪', '󱤫', '󱤬', '󱤭', '󱤮', '󱤯'), 
+                    keyboardRow('󱤰', '󱤱', '󱤲', '󱤳', '󱦂', '󱤴', '󱤵', '󱦇'),
+                    keyboardRow('󱤶', '󱤷', '󱤸', '󱥽', '󱤹', '󱤺', '󱤻', '󱤼'), 
+                    keyboardRow('󱦆', '󱥸', '󱤽', '󱤾', '󱤿', '󱥀', '󱥁', '󱥂', '󱥃'), 
+                    keyboardRow('󱥄', '󱥅', '󱥆', '󱥇'),
+                    keyboardRow('󱥈', '󱥉', '󱥊', '󱥋', '󱥌', '󱥍', '󱥎'),
+                    keyboardRow('󱥏', '󱥐', '󱥑', '󱥒', '󱥓', '󱥔'),
+                    keyboardRow('󱥖', '󱥗', '󱥘', '󱥙', '󱥚', '󱥛', '󱥜', '󱥝', '󱥞'),
+                    keyboardRow('󱥟', '󱥠', '󱦁', '󱥡', '󱥢', '󱥣', '󱥤', '󱥥', '󱥦'),
+                    keyboardRow('󱥧', '󱥨', '󱥩', '󱥪', '󱥫', '󱥬', '󱥭', '󱥾', '󱥮'),
+                    keyboardRow('󱥯', '󱥰', '󱥱'),
+                    keyboardRow('󱥲', '󱥳', '󱥴', '󱥵', '󱥶', '󱥷')], 2, false, true),
+            keyboardRow(cartoucheKey(), '{', '}', 'te', 'to', ' ', ':', '.', functionKey('linja sin', newLine))];

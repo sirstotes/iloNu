@@ -1,12 +1,30 @@
-/*ff6b6b
-ffe66d*/
+:root {
+    color-scheme: light dark;
+    --background-color: #1a535c;
+    --text-area-background-color: light-dark(#f7fff7, #172a2e);
+    --text-color: light-dark(#010303, #f7fff7);
+    --button-color: light-dark(#4ecdc4, #349090);
+    --button-hover-color: light-dark(#7cece5, #47a8a8);
+    --button-text-color: var(--text-color);
+    --secondary-button-color: light-dark(#349090, #4ecdc4);
+    --secondary-button-hover-color: light-dark(#47a8a8, #7cece5);
+    --secondary-button-text-color: #f7fff7;
+    --toolbar-button-color: light-dark(#ecf3ec, #324b4b);
+    --toolbar-button-hover-color: light-dark(#f7fff7, #426161);
+    --red-accent-color: #ff6b6b;
+    --yellow-accent-color: #ffe66d;
+
+    --font-size: 25px;
+    --input-text-color: var(--text-color);
+}
 html {
     overflow: hidden;
+    font-family: 'Linjamanka';
 }
 body {
     margin: 0;
-    background-color: #1a535c;
-    color: #010303;
+    background-color: var(--background-color);
+    color: var(--text-color);
     display:flex;
     flex-direction: column;
     height: 100%;
@@ -18,48 +36,146 @@ header {
     padding-top:5px;
     padding-left:5px;
     display: flex;
-    align-items: stretch;
-    overflow-x:auto;
-    gap:5px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
     flex-shrink: 0;
+    > button {
+        background-color: var(--button-color);
+        color: var(--button-text-color);
+        font-size: 25px;
+        padding: 5px;
+        border-radius: 50%;
+        margin-bottom: 5px;
+        aspect-ratio: 1 / 1;
+        &:hover {
+            background-color: var(--button-hover-color);
+            cursor: pointer;
+        }
+    }
 }
 button {
     border: none;
     border-radius: 10px;
-    font-family: 'Linjamanka';
+    font-family: inherit;
 }
-header > button {
-    background-color: #4ecdc4;
-    font-size: 25px;
-    border-radius: 50%;
-    margin-bottom: 5px;
-    width:35px;
-    height:35px;
+.toolbar {
+    background-color: var(--text-area-background-color);
+    padding: 5px;
+    border-bottom: 2px solid var(--secondary-button-color);
+    overflow-x: auto;
+    button {
+        border-radius: 2px;
+        font-size: 20px;
+        background-color: var(--toolbar-button-color);
+        margin-inline-end: 5px;
+        &:hover {
+            background-color: var(--toolbar-button-hover-color);
+            cursor: pointer;
+        }
+    }
+    > span {
+        font-size: 20px;
+        padding-block: 1px;
+        padding-inline: 6px;
+        margin-inline-end: 5px;
+    }
+}
+.dropdown {
+    display: inline-block;
+    > button:hover {
+        background-color: var(--secondary-button-hover-color);
+        color: var(--secondary-button-text-color);
+    }
+    &:hover > button {
+        background-color: var(--secondary-button-hover-color);
+        color: var(--secondary-button-text-color);
+    }
+    &:hover .dropdown-content {
+        display: block;
+    }
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    button {
+        display: block;
+        width: 100px;
+    }
 }
 .textarea {
-    background-color: #f7fff7;
+    background-color: var(--text-area-background-color);
     padding: 10px;
     flex-grow:1;
     overflow-y: auto;
+    font-size: var(--font-size);
 }
 .tab {
-    background-color: #4ecdc4;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    display: flex;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    display: inline-block;
     align-items: center;
+    white-space: nowrap;
+    --tabGirth: 12px;
+    padding-top: 5px;
+    padding-left: var(--tabGirth);
+    padding-right: var(--tabGirth);
+    align-self: stretch;
+    filter: drop-shadow(0 0 4px lch(0% 0 0 / 0.2));
+    transform: translate(0, 1px);
+
+    &:hover {
+        background-color: var(--button-hover-color);
+        cursor: pointer;
+    }
+    &:nth-child(2) {
+        margin-inline-start: calc(var(--tabGirth) * 0.5 * -1);
+    }
+    &:nth-last-child(2) {
+        margin-inline-end: calc(var(--tabGirth) * 0.5 * -1);
+    }
+    &:not(:nth-child(2)) {
+        margin-inline-start: calc(var(--tabGirth) * 2 * -1);
+    }
+
+    clip-path: shape(
+        from bottom left,
+        curve to var(--tabGirth) calc(100% - var(--tabGirth)) with
+        var(--tabGirth) 100%,
+        vline to var(--tabGirth),
+        curve to calc(var(--tabGirth) * 2) 0 with var(--tabGirth) 0,
+        hline to calc(100% - calc(var(--tabGirth) * 2)),
+        curve to calc(100% - var(--tabGirth)) var(--tabGirth) with
+        calc(100% - var(--tabGirth)) 0,
+        vline to calc(100% - var(--tabGirth)),
+        curve to 100% 100% with calc(100% - var(--tabGirth)) 100%
+    );
+    button {
+        font-size: 25px;
+        background: none;
+        display: inline-block;
+        justify-content: center;
+        color: inherit;
+    }
+    .tab_erase:hover {
+        color: var(--red-accent-color);
+        cursor: pointer;
+    }
 }
 #current_tab {
-    background-color: #f7fff7;
-}
-.tab button {
-    font-size: 25px;
-    background: none;
-    display: flex;
-    justify-content: center;
+    background-color: var(--text-area-background-color);
+    z-index: 100;
+    &:hover {
+        cursor: auto;
+    }
+    color: var(--text-color);
+    .tab_name:hover {
+        color: var(--yellow-accent-color);
+        cursor: text;
+    }
 }
 #keyboard_container {
-    background-color: #1a535c;
+    background-color: var(--background-color);
     flex-basis: 25%;
     flex-shrink: 0;
     padding:10px 5px 20px 5px;
@@ -69,11 +185,44 @@ header > button {
 .keyboard {
     flex-grow:1;
 }
+.keyrow {
+    flex-basis: 20%;
+    flex-grow: 0;
+}
+.multirow .keyrow {
+    flex-grow: 1;
+}
 .key {
-    background-color: #4ecdc4;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
     margin: 2px;
+    &:hover {
+        background-color: var(--button-hover-color);
+        cursor: pointer;
+    }
 }
 .function_key {
-    background-color: #349090;
+    background-color: var(--secondary-button-color);
     color: #f7fff7;
+    &:hover {
+        background-color: var(--secondary-button-hover-color);
+        cursor: pointer;
+    }
+}
+cursor::after {
+    content: '';
+    height: var(--font-size);
+    border-left: calc(var(--font-size) * 0.1) solid var(--input-text-color);
+    animation: blink 1s linear infinite;
+}
+@keyframes blink {
+    0%   { visibility: visible; }
+    49%  { visibility: visible; }
+    50%  { visibility: hidden; }
+    100% { visibility: hidden; }
+}
+.nimi {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
