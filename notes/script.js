@@ -1,3 +1,4 @@
+// document.addEventListener('click', (e) => console.log(e.target));
 function switchTab(tab) {
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
@@ -12,33 +13,45 @@ function switchTab(tab) {
     document.getElementById('textarea').style.fontFamily = tab.savedFont || 'inherit';
     let before = true;
     let after = false;
+    let index = tab.parentElement.children.length;
     Array.from(tab.parentElement.children).forEach(child => {
+        index -= 1;
         child.classList.remove('after_current_tab');
         child.classList.remove('before_current_tab');
+        child.style.zIndex = '';
         if(child == tab) {
             before = false;
+            child.style.zIndex = index;
         } else if (before) {
             child.classList.add('before_current_tab');
         } else {
             child.classList.add('after_current_tab');
+            if(child.classList.contains('tab')) {
+                child.style.zIndex = index;
+            }
         }
     });
     tab.id = 'current_tab';
-    let close = document.createElement('button');
-    close.innerHTML = 'weka';
-    close.classList.add('tab_erase');
-    close.style.fontSize = '20px';
-    close.addEventListener('click', function(event) {
-        removeTab(tab);
+    let weka = document.createElement('button');
+    weka.innerHTML = 'weka';
+    weka.classList.add('tab_erase');
+    weka.style.fontSize = '20px';
+    weka.readyToDelete = false;
+    weka.addEventListener('click', function(event) {
+        if(weka.readyToDelete) {//Require two clicks to prevent accidental deletion
+            removeTab(tab);
+        } else {
+            weka.readyToDelete = true;
+        }
     });
     function getChildIndex(node) {
         return Array.from(node.parentNode.childNodes).indexOf(node);
     }
-    if(getChildIndex(tab) < 4) {
-        tab.append(close);
-    } else {
-        tab.insertBefore(close, tab.children[0]);
-    }
+    // if(getChildIndex(tab) < 4) {
+    //     tab.append(weka);
+    // } else {
+        tab.insertBefore(weka, tab.children[0]);
+    // }
     moveCursorInto(document.getElementById('textarea'));
 }
 function tab(innerHTML) {
@@ -117,7 +130,7 @@ function saveTabs(store) {
             const request = store.get(tab.dbID);
             request.onsuccess = (event) => {
                 const data = event.target.result;
-                data.title = tab.getElementsByTagName('button')[0].innerHTML;
+                data.title = tab.getElementsByClassName('tab_name')[0].innerHTML;
                 if(tab.id == 'current_tab') {
                     tab.savedData = document.getElementById('textarea').innerHTML;
                     tab.savedFont = document.getElementById('textarea').style.fontFamily;
@@ -129,11 +142,11 @@ function saveTabs(store) {
         } else {//Otherwise create a new entry
             if(tab.id == 'current_tab') {
                 tab.savedData = document.getElementById('textarea').innerHTML;
-                    tab.savedFont = document.getElementById('textarea').style.fontFamily;
+                tab.savedFont = document.getElementById('textarea').style.fontFamily;
             }
             if(tab.savedData.length > 0) {//Only save if it has been changed
                 console.log("Adding new data");
-                store.add({title: tab.getElementsByTagName('button')[0].innerHTML, data: tab.savedData, font: tab.savedFont});
+                store.add({title: tab.getElementsByClassName('tab_name')[0].innerHTML, data: tab.savedData, font: tab.savedFont});
             }
         }
     }

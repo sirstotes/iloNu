@@ -19,7 +19,7 @@
     <div id="toolbar" class="toolbar scrollbar-hide">
         <span>ale</span>
         <button onclick="toggleDarkMode()">suno</button>
-        <select onchange="setWebsiteFont(this.value)">
+        <select onchange="setWebsiteFont(this.value)"><!--TODO swap these for a built-in version (custom styling pls TwT)-->
             <option style="font-family: 'Linjamanka';" value="Linjamanka">linja lipamanka</option>
             <option style="font-family: 'Fairfax';" value="Fairfax">Fairfax</option> <!--TODO: make fairfax remove border radiuses-->
             <option style="font-family: 'Fairfax HD';" value="Fairfax HD">FairfaxHD</option>
@@ -29,7 +29,7 @@
         <span>lipu</span>
         <button onclick="decreaseFontSize()">lili</button>
         <button onclick="increaseFontSize()">suli</button>
-        <select onchange="setInputColor(this.value)">
+        <select onchange="setInputColor(this.value)" onclick="setInputColor(this.value)">
             <option onclick="setInputColor('')">kule linja</option>
             <option style="color: var(--loje);" value="var(--loje)">linja loje</option>
             <option style="color: var(--jelo);" value="var(--jelo)">linja jelo</option>
@@ -37,7 +37,7 @@
             <option style="color: var(--pimeja);" value="var(--pimeja)">linja pimeja</option>
             <option style="color: var(--walo);" value="var(--walo)">linja walo</option>
         </select>
-        <select onchange="setInputHighlight(this.value)">
+        <select onchange="setInputHighlight(this.value)" onclick="setInputHighlight(this.value)">
             <option value="">kule monsi</option>
             <option style="background-color: var(--loje);" value="var(--loje)">monsi loje</option>
             <option style="background-color: var(--jelo);" value="var(--jelo)">monsi jelo</option>

@@ -2,12 +2,15 @@
     color-scheme: light dark;
     --background-color: #1a535c;
     --text-area-background-color: light-dark(#f7fff7, #172a2e);
+    --text-area-shadow-color: light-dark(#edf3ed, #000000);
     --text-color: light-dark(#010303, #f7fff7);
     --button-color: light-dark(#4ecdc4, #349090);
     --button-hover-color: light-dark(#7cece5, #47a8a8);
+    --button-shadow-color: light-dark(#41ada6, #297474);
     --button-text-color: var(--text-color);
     --secondary-button-color: light-dark(#349090, #4ecdc4);
     --secondary-button-hover-color: light-dark(#47a8a8, #7cece5);
+    --secondary-button-shadow-color: light-dark(#297474, #41ada6);
     --secondary-button-text-color: #f7fff7;
     --toolbar-button-color: light-dark(#ecf3ec, #324b4b);
     --toolbar-button-hover-color: light-dark(#f7fff7, #426161);
@@ -74,17 +77,16 @@ button {
 .toolbar {
     background-color: var(--text-area-background-color);
     padding: 5px;
-    border-bottom: 2px solid var(--secondary-button-color);
+    border-bottom: 3px solid var(--secondary-button-color);
     overflow-x: auto;
     overflow-y: visible;
     display: flex;
-    justify-content: center;
+    justify-content: start;
     min-height:5ex;
-    :first-child {
-        margin-left:9em;
-    }
+    box-shadow: 0 10px 10px var(--text-area-shadow-color);
+    z-index: 1;
     button, select {
-        padding: 5px;
+        padding: 0px 5px 0px 5px;
         flex-shrink: 0;
         border-radius: 0px;
         font-size: 20px;
@@ -162,40 +164,28 @@ option {
     white-space: nowrap;
     --tabRadius: 12px;
     padding-top: 5px;
+    align-self: stretch;
     padding-left: var(--tabRadius);
     padding-right: var(--tabRadius);
-    align-self: stretch;
-    filter: drop-shadow(0 0 4px lch(0% 0 0 / 0.2));
-    transform: translate(0, 1px);
 
     &:hover {
         background-color: var(--button-hover-color);
         cursor: pointer;
     }
-    :last-child {/*TODO: FIX TAB MARGINS AAAAAAHHAAAAAAAAAA*/
-        padding-right: calc(var(--tabRadius));
-    }
-    &:nth-last-child(2) {
-        margin-inline-end: calc(var(--tabRadius) * 1);
-    }
-    &:not(:nth-child(2)) {
-        margin-inline-start: calc(var(--tabRadius) * -2);
-    }
     &.before_current_tab {
+        transform: translate(0, 10px);
         border-top-left-radius: var(--tabRadius);
         background-color: var(--secondary-button-color);
         color: var(--secondary-button-text-color);
-        &:first-child {
-            margin-left: calc(var(--tabRadius) * 2);
-        }
-        &:nth-child(2) {
-            margin-inline-start: calc(var(--tabRadius) * 1);
-        }
+        margin-right: calc(var(--tabRadius) * -1);
+        background: linear-gradient(270deg, var(--secondary-button-shadow-color) 0%, var(--secondary-button-color) calc(var(--tabRadius)*2));
     }
     &#current_tab {
-        :first-child {
-            padding-left: calc(var(--tabRadius));
-        }
+        transform: translate(0, 1px);
+        margin-left: calc(var(--tabRadius) * -1);
+        margin-right: calc(var(--tabRadius) * -1);
+        padding-left: calc(var(--tabRadius) * 2);
+        padding-right: calc(var(--tabRadius) * 2);
         clip-path: shape(
             from bottom left,
             curve to var(--tabRadius) calc(100% - var(--tabRadius)) with
@@ -208,10 +198,44 @@ option {
             vline to calc(100% - var(--tabRadius)),
             curve to 100% 100% with calc(100% - var(--tabRadius)) 100%
         );
+        background-color: var(--text-area-background-color);
+        &:hover {
+            cursor: auto;
+        }
+        color: var(--text-color);
+        .tab_name:hover {
+            cursor: text;
+        }
     }
     &.after_current_tab {
+        transform: translate(0, 1px);
         border-top-right-radius: var(--tabRadius);
-        margin-right: var(--tabRadius);
+        margin-left: calc(var(--tabRadius) * -1);
+        margin-right: calc(var(--tabRadius) * -1);
+        padding-right: calc(var(--tabRadius) * 2);
+        background: var(--button-color);
+        background: linear-gradient(90deg, var(--button-shadow-color) 0%, var(--button-color) calc(var(--tabRadius)*2));
+        clip-path: shape(
+            from top left,
+            hline to calc(100% - calc(var(--tabRadius) * 2)),
+            curve to calc(100% - var(--tabRadius)) var(--tabRadius) with
+            calc(100% - var(--tabRadius)) 0,
+            vline to calc(100% - var(--tabRadius)),
+            curve to 100% 100% with calc(100% - var(--tabRadius)) 100%,
+            hline to 0
+        );
+    }
+    &:nth-last-child(2) {
+        margin-right: 5px;
+        &#current_tab, &.after_current_tab {
+            margin-right:  calc(var(--tabRadius) * -1 + 5px);
+        }
+    }
+    &:nth-child(2) {
+        margin-left: 5px;
+        &#current_tab {
+            margin-left:  calc(var(--tabRadius) * -1 + 5px);
+        }
     }
     button {
         font-size: 25px;
@@ -226,17 +250,6 @@ option {
     .tab_erase:hover {
         color: var(--red-accent-color);
         cursor: pointer;
-    }
-}
-#current_tab {
-    background-color: var(--text-area-background-color);
-    z-index: 100;
-    &:hover {
-        cursor: auto;
-    }
-    color: var(--text-color);
-    .tab_name:hover {
-        cursor: text;
     }
 }
 #keyboard_container {
