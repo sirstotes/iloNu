@@ -31,9 +31,10 @@
     white-space: pre;
 }
 cursor {
+    vertical-align: middle;
     display: inline-block;
     width: 0;
-    height: 0;
+    height: 1em;
     font-family: 'Courier New', Courier, monospace;
 }
 @keyframes blink {

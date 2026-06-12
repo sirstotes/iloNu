@@ -55,7 +55,7 @@ function backspace() {
         getCursor().previousElementSibling.remove();
     }
 }
-function newLine() {
+function newLine() {//TODO: Make spaces fill entire note, to end of scroll. No more <br> tags
     const customEvent = new CustomEvent('wordsChanged', {
         bubbles: true,
         cancelable: true

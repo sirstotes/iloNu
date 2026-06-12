@@ -10,6 +10,19 @@ function switchTab(tab) {
     }
     document.getElementById('textarea').innerHTML = tab.savedData;
     document.getElementById('textarea').style.fontFamily = tab.savedFont || 'inherit';
+    let before = true;
+    let after = false;
+    Array.from(tab.parentElement.children).forEach(child => {
+        child.classList.remove('after_current_tab');
+        child.classList.remove('before_current_tab');
+        if(child == tab) {
+            before = false;
+        } else if (before) {
+            child.classList.add('before_current_tab');
+        } else {
+            child.classList.add('after_current_tab');
+        }
+    });
     tab.id = 'current_tab';
     let close = document.createElement('button');
     close.innerHTML = 'weka';
@@ -18,7 +31,14 @@ function switchTab(tab) {
     close.addEventListener('click', function(event) {
         removeTab(tab);
     });
-    tab.appendChild(close);
+    function getChildIndex(node) {
+        return Array.from(node.parentNode.childNodes).indexOf(node);
+    }
+    if(getChildIndex(tab) < 4) {
+        tab.append(close);
+    } else {
+        tab.insertBefore(close, tab.children[0]);
+    }
     moveCursorInto(document.getElementById('textarea'));
 }
 function tab(innerHTML) {
@@ -128,10 +148,10 @@ function toggleHidden(element) {
     setHidden(element, !getHidden(element));
 }
 function setFontSize(size) {
-    document.documentElement.style.setProperty("--font-size", String(size)+"px");
+    document.getElementById('textarea').style.setProperty("--font-size", String(size)+"px");
 }
 function getFontSize() {
-    return parseInt(document.documentElement.style.getPropertyValue('--font-size'));
+    return parseInt(document.getElementById('textarea').style.getPropertyValue('--font-size'));
 }
 function increaseFontSize() {
     setFontSize(getFontSize() + 1);
@@ -163,7 +183,7 @@ function getInputColor() {
 }
 function setInputColor(color) {
     document.documentElement.style.setProperty("--input-text-color", color);
-    document.getElementById('input-color-preview').style.color = color;
+    //document.getElementById('input-color-preview').style.color = color;
     for(let e of document.getElementsByClassName('selected')) {
         e.style.color = color;
     }
@@ -173,7 +193,7 @@ function getInputHighlight() {
 }
 function setInputHighlight(color) {
     document.documentElement.style.setProperty("--input-highlight-color", color);
-    document.getElementById('input-highlight-preview').style.backgroundColor = color;
+    //document.getElementById('input-highlight-preview').style.backgroundColor = color;
     for(let e of document.getElementsByClassName('selected')) {
         e.style.backgroundColor = color;
     }

@@ -16,50 +16,41 @@
         <button id="new" onclick="newTab();">en</button>
         <!-- <button id="save"><span>sin</span></button> -->
     </header>
-    <div id="toolbar" class="toolbar">
+    <div id="toolbar" class="toolbar scrollbar-hide">
         <span>ale</span>
         <button onclick="toggleDarkMode()">suno</button>
-        <div class="dropdown">
-            <button>nasin linja</button>
-            <div class="dropdown-content">
-                <button style="font-family: 'Linjamanka';" onclick="setWebsiteFont('Linjamanka')">linja lipamanka</button>
-                <button style="font-family: 'Fairfax';" onclick="setWebsiteFont('Fairfax')">Fairfax</button>
-                <button style="font-family: 'Fairfax HD';" onclick="setWebsiteFont('Fairfax HD')">FairfaxHD</button>
-                <button style="font-family: 'nasin nanpa';" onclick="setWebsiteFont('nasin nanpa')">nasin nanpa</button>
-            </div>
-        </div>
+        <select onchange="setWebsiteFont(this.value)">
+            <option style="font-family: 'Linjamanka';" value="Linjamanka">linja lipamanka</option>
+            <option style="font-family: 'Fairfax';" value="Fairfax">Fairfax</option> <!--TODO: make fairfax remove border radiuses-->
+            <option style="font-family: 'Fairfax HD';" value="Fairfax HD">FairfaxHD</option>
+            <option style="font-family: 'nasin nanpa';" value="nasin nanpa">nasin nanpa</option>
+        </select>
         <button onclick="toggleHidden(document.getElementById('keyboard_container'))">nena</button>
         <span>lipu</span>
         <button onclick="decreaseFontSize()">lili</button>
         <button onclick="increaseFontSize()">suli</button>
-        <div class="dropdown">
-            <button id="input-color-preview" onclick="setInputColor(getInputColor())">kule linja</button>
-            <div class="dropdown-content">
-                <button onclick="setInputColor('')">ala</button>
-                <button style="color: var(--loje);" onclick="setInputColor('var(--loje)')">loje</button>
-                <button style="color: var(--jelo);" onclick="setInputColor('var(--jelo)')">jelo</button>
-                <button style="color: var(--laso);" onclick="setInputColor('var(--laso)')">laso</button>
-                <button style="color: var(--pimeja);" onclick="setInputColor('var(--pimeja)')">pimeja</button>
-                <button style="color: var(--walo);" onclick="setInputColor('var(--walo)')">walo</button>
-            </div>
-        </div>
-        <div class="dropdown">
-            <button id="input-highlight-preview" onclick="setInputHighlight(getInputHighlight())">kule monsi</button>
-            <div class="dropdown-content">
-                <button onclick="setInputHighlight('')">ala</button>
-                <button style="background-color: var(--loje);" onclick="setInputHighlight('var(--loje)')">loje</button>
-                <button style="background-color: var(--jelo);" onclick="setInputHighlight('var(--jelo)')">jelo</button>
-                <button style="background-color: var(--laso);" onclick="setInputHighlight('var(--laso)')">laso</button>
-                <button style="background-color: var(--pimeja);color:var(--walo);" onclick="setInputHighlight('var(--pimeja)')">pimeja</button>
-                <button style="background-color: var(--walo);" onclick="setInputHighlight('var(--walo)')">walo</button>
-            </div>
-        </div>
+        <select onchange="setInputColor(this.value)">
+            <option onclick="setInputColor('')">kule linja</option>
+            <option style="color: var(--loje);" value="var(--loje)">linja loje</option>
+            <option style="color: var(--jelo);" value="var(--jelo)">linja jelo</option>
+            <option style="color: var(--laso);" value="var(--laso)">linja laso</option>
+            <option style="color: var(--pimeja);" value="var(--pimeja)">linja pimeja</option>
+            <option style="color: var(--walo);" value="var(--walo)">linja walo</option>
+        </select>
+        <select onchange="setInputHighlight(this.value)">
+            <option value="">kule monsi</option>
+            <option style="background-color: var(--loje);" value="var(--loje)">monsi loje</option>
+            <option style="background-color: var(--jelo);" value="var(--jelo)">monsi jelo</option>
+            <option style="background-color: var(--laso);" value="var(--laso)">monsi laso</option>
+            <option style="background-color: var(--pimeja);color:var(--walo);" value="var(--pimeja)">monsi pimeja</option>
+            <option style="background-color: var(--walo);" value="var(--walo)">monsi walo</option>
+        </select>
         <span>jelo</span>
         <button onclick="copySelection()">tu</button>
         <button onclick="cutSelection()">jo</button>
         <button onclick="pasteFromClipboard()">pana</button>
     </div>
-    <main id="textarea" class="textarea"></main>
+    <main id="textarea" class="textarea scrollbar-hide"></main>
     <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>
     <script>
         setKeyboard(document.getElementById('keyboard'), UCSURRows);
@@ -102,10 +93,13 @@
                     if(cursorParent) {
                         cursorIndex = Array.from(cursorParent.childNodes).indexOf(getCursor());
                     }
+                    let selection = Array.from(document.getElementsByClassName('selected'));
+
                     saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
                     if(cursorParent) {
                         moveCursorInto(cursorParent, cursorIndex);
                     }
+                    selection.forEach(e => e.classList.add('selected'));
                 }
             }, 10000);//Autosave every 60 seconds
         };

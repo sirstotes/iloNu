@@ -49,12 +49,17 @@ header {
     flex-shrink: 0;
     > button {
         background-color: var(--button-color);
-        color: var(--button-text-color);
+        color: var(--button-text-color); 
         font-size: 25px;
         border-radius: 50%;
+        padding-left:5.5px;
         margin-top: 5px;
         margin-bottom: 5px;
         aspect-ratio: 1 / 1;
+        :first-child {
+            background-color: var(--secondary-button-color);
+            color: var(--secondary-button-text-color); 
+        }
         &:hover {
             background-color: var(--button-hover-color);
             cursor: pointer;
@@ -73,8 +78,15 @@ button {
     overflow-x: auto;
     overflow-y: visible;
     display: flex;
-    button {
-        border-radius: 2px;
+    justify-content: center;
+    min-height:5ex;
+    :first-child {
+        margin-left:9em;
+    }
+    button, select {
+        padding: 5px;
+        flex-shrink: 0;
+        border-radius: 0px;
         font-size: 20px;
         background-color: var(--toolbar-button-color);
         margin-inline-end: 5px;
@@ -84,14 +96,22 @@ button {
         }
     }
     > span {
+        flex-shrink: 0;
+        vertical-align: center;
         font-size: 20px;
-        padding-block: 1px;
+        padding-block: 6px;
         padding-inline: 6px;
         margin-inline-end: 5px;
     }
 }
+/* .dropdown-container {
+    width: 100%;
+}
 .dropdown {
-    display: inline-block;
+    display: block;
+    position: relative;
+    top: auto;
+    left: auto;
     > button:hover {
         background-color: var(--secondary-button-hover-color);
         color: var(--secondary-button-text-color);
@@ -111,6 +131,17 @@ button {
         display: block;
         width: 100%;
     }
+} */
+select {
+    width:50px;
+    appearance: none;
+    font-family: inherit;
+    border: none;
+    background-color: var(--toolbar-button-color);
+}
+option {
+    appearance: none;
+    font-family: inherit;
 }
 .textarea {
     background-color: var(--text-area-background-color);
@@ -129,10 +160,10 @@ button {
     display: inline-block;
     align-items: center;
     white-space: nowrap;
-    --tabGirth: 12px;
+    --tabRadius: 12px;
     padding-top: 5px;
-    padding-left: var(--tabGirth);
-    padding-right: var(--tabGirth);
+    padding-left: var(--tabRadius);
+    padding-right: var(--tabRadius);
     align-self: stretch;
     filter: drop-shadow(0 0 4px lch(0% 0 0 / 0.2));
     transform: translate(0, 1px);
@@ -141,28 +172,47 @@ button {
         background-color: var(--button-hover-color);
         cursor: pointer;
     }
-    &:nth-child(2) {
-        margin-inline-start: calc(var(--tabGirth) * 0.5 * -1);
+    :last-child {/*TODO: FIX TAB MARGINS AAAAAAHHAAAAAAAAAA*/
+        padding-right: calc(var(--tabRadius));
     }
     &:nth-last-child(2) {
-        margin-inline-end: calc(var(--tabGirth) * 0.5 * -1);
+        margin-inline-end: calc(var(--tabRadius) * 1);
     }
     &:not(:nth-child(2)) {
-        margin-inline-start: calc(var(--tabGirth) * 2 * -1);
+        margin-inline-start: calc(var(--tabRadius) * -2);
     }
-
-    clip-path: shape(
-        from bottom left,
-        curve to var(--tabGirth) calc(100% - var(--tabGirth)) with
-        var(--tabGirth) 100%,
-        vline to var(--tabGirth),
-        curve to calc(var(--tabGirth) * 2) 0 with var(--tabGirth) 0,
-        hline to calc(100% - calc(var(--tabGirth) * 2)),
-        curve to calc(100% - var(--tabGirth)) var(--tabGirth) with
-        calc(100% - var(--tabGirth)) 0,
-        vline to calc(100% - var(--tabGirth)),
-        curve to 100% 100% with calc(100% - var(--tabGirth)) 100%
-    );
+    &.before_current_tab {
+        border-top-left-radius: var(--tabRadius);
+        background-color: var(--secondary-button-color);
+        color: var(--secondary-button-text-color);
+        &:first-child {
+            margin-left: calc(var(--tabRadius) * 2);
+        }
+        &:nth-child(2) {
+            margin-inline-start: calc(var(--tabRadius) * 1);
+        }
+    }
+    &#current_tab {
+        :first-child {
+            padding-left: calc(var(--tabRadius));
+        }
+        clip-path: shape(
+            from bottom left,
+            curve to var(--tabRadius) calc(100% - var(--tabRadius)) with
+            var(--tabRadius) 100%,
+            vline to var(--tabRadius),
+            curve to calc(var(--tabRadius) * 2) 0 with var(--tabRadius) 0,
+            hline to calc(100% - calc(var(--tabRadius) * 2)),
+            curve to calc(100% - var(--tabRadius)) var(--tabRadius) with
+            calc(100% - var(--tabRadius)) 0,
+            vline to calc(100% - var(--tabRadius)),
+            curve to 100% 100% with calc(100% - var(--tabRadius)) 100%
+        );
+    }
+    &.after_current_tab {
+        border-top-right-radius: var(--tabRadius);
+        margin-right: var(--tabRadius);
+    }
     button {
         font-size: 25px;
         background: none;
@@ -186,7 +236,6 @@ button {
     }
     color: var(--text-color);
     .tab_name:hover {
-        color: var(--yellow-accent-color);
         cursor: text;
     }
 }
@@ -226,10 +275,13 @@ button {
     }
 }
 cursor::after {
+    display: block;
+    position:relative;
     content: '';
     height: var(--font-size);
     border-left: calc(var(--font-size) * 0.1) solid var(--input-text-color);
     animation: blink 1s linear infinite;
+    z-index: 100;
 }
 @keyframes blink {
     0%   { visibility: visible; }
@@ -241,7 +293,11 @@ cursor::after {
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    vertical-align: middle;
+    min-width: 2ex;
+    height:2ex;
 }
 .selected {
     background-color: var(--yellow-accent-color) !important;
 }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
