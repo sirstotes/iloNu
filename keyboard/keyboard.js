@@ -1,42 +1,61 @@
 
-function getCursor() {
-    if(document.getElementById('cursor')) {
-        return document.getElementById('cursor');
-    }
-    let cursor = document.createElement('cursor');
-    cursor.id = 'cursor';
-    return cursor
-}
-function removeCursor() {
-    getCursor().remove();
-}
-function type(word) {
-    let span = document.createElement('span');
-    span.innerHTML = word;// + ' ';
+// function getCursor() {
+//     if(document.getElementById('cursor')) {
+//         return document.getElementById('cursor');
+//     }
+//     let cursor = document.createElement('cursor');
+//     cursor.id = 'cursor';
+//     return cursor
+// }
+// function removeCursor() {
+//     getCursor().remove();
+// }
+function clearSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length > 0) {
-        selection[0].replaceWith(span);
+    selection.forEach(e => e.classList.remove('selected'));
+    selection = Array.from(document.getElementsByClassName('single_selection'));
+    selection.forEach(e => e.classList.remove('single_selection'));
+}
+function select(element) {
+    element.classList.add('selected');
+    element.classList.add('single_selection');
+    return element;
+}
+function createWordSpan(content) {
+    let span = document.createElement('nimi');
+    span.innerHTML = content;
+    return span;
+}
+function putElements(elements) {
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length == 0) {return;}
+    let lastElement = elements[elements.length - 1];
+    elements.forEach(e => selection[0].parentElement.insertBefore(e, selection[0]))
+    if (selection.length > 1) {
         for(let i = 1; i < selection.length; i ++) {
             selection[i].remove();
         }
-        moveCursorAfter(span);
-    } else {
-        if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == ' ') {
-            getCursor().nextElementSibling.remove();
+        if(lastElement.nextElementSibling == undefined) {
+            lastElement.parentElement.appendChild(select(createWordSpan(' ')));
+        } else {
+            select(lastElement.nextElementSibling);
         }
-        getCursor().before(span);
     }
     const customEvent = new CustomEvent('wordsChanged', {
         bubbles: true,
         cancelable: true
     });
-    span.dispatchEvent(customEvent);
+    document.dispatchEvent(customEvent);
+}
+function type(word) {
+    let span = createWordSpan(word);
+    putElements([span]);
     const customEvent2 = new CustomEvent('wordTyped', {
         detail: {span: span},
         bubbles: true,
         cancelable: true
     });
-    span.dispatchEvent(customEvent2);
+    document.dispatchEvent(customEvent2);
     return span;
 }
 function backspace() {
@@ -46,59 +65,51 @@ function backspace() {
     });
     document.dispatchEvent(customEvent);
     let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length > 0) {
-        moveCursorAfter(selection[0]);
+    if(selection.length == 1) {
+        if(selection[0].previousElementSibling != undefined) {
+           selection[0].previousElementSibling.remove();
+        } 
+    } else if(selection.length > 0) {
+        //moveCursorAfter(selection[0]);
+        if(selection[selection.length - 1].nextElementSibling == undefined) {
+           selection[selection.length - 1].parentElement.append(select(createWordSpan(' ')));
+        } else {
+            select(selection[selection.length - 1].nextElementSibling);
+        }
         for(let i = 0; i < selection.length; i ++) {
             selection[i].remove();
         }
-    } else if(getCursor().previousElementSibling) {
-        getCursor().previousElementSibling.remove();
-    }
+    }// else if(getCursor().previousElementSibling) {
+    //     getCursor().previousElementSibling.remove();
+    // }
 }
 function newLine() {//TODO: Make spaces fill entire note, to end of scroll. No more <br> tags
-    const customEvent = new CustomEvent('wordsChanged', {
-        bubbles: true,
-        cancelable: true
-    });
-    document.dispatchEvent(customEvent);
-    let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length > 0) {
-        moveCursorAfter(selection[0]);
-        selection[0].replaceWith(document.createElement('br'));
-        for(let i = 1; i < selection.length; i ++) {
-            selection[i].remove();
-        }
-    } else {
-        if(getCursor().nextElementSibling && getCursor().nextElementSibling.innerHTML == '_') {
-            getCursor().nextElementSibling.remove();
-        }
-        getCursor().before(document.createElement('br'));
-    }
+    putElements([document.createElement('br')]);
 }
-function moveCursorAfter(element) {
-    let cursor = getCursor();
-    if(cursor.parentElement) {
-        if(cursor.parentElement != element && cursor.parentElement.isCartouche && cursor.parentElement != element.parentElement) {
-            cursor.parentElement.endCartouche();
-        }
-        cursor.parentElement.removeChild(cursor);
-    }
-    element.after(cursor);
-}
-function moveCursorInto(element) {
-    let cursor = getCursor();
-    if(cursor.parentElement) {
-        if(cursor.parentElement != element && cursor.parentElement.isCartouche && cursor.parentElement != element.parentElement) {
-            cursor.parentElement.endCartouche();
-        }
-        cursor.parentElement.removeChild(cursor);
-    }
-    if(arguments[1] != undefined) {
-        element.childNodes[arguments[1] - 1].after(cursor);
-    } else {
-        element.appendChild(cursor);
-    }
-}
+// function moveCursorAfter(element) {
+//     let cursor = getCursor();
+//     if(cursor.parentElement) {
+//         if(cursor.parentElement != element && cursor.parentElement.isCartouche && cursor.parentElement != element.parentElement) {
+//             cursor.parentElement.endCartouche();
+//         }
+//         cursor.parentElement.removeChild(cursor);
+//     }
+//     element.after(cursor);
+// }
+// function moveCursorInto(element) {
+//     let cursor = getCursor();
+//     if(cursor.parentElement) {
+//         if(cursor.parentElement != element && cursor.parentElement.isCartouche && cursor.parentElement != element.parentElement) {
+//             cursor.parentElement.endCartouche();
+//         }
+//         cursor.parentElement.removeChild(cursor);
+//     }
+//     if(arguments[1] != undefined) {
+//         element.childNodes[arguments[1] - 1].after(cursor);
+//     } else {
+//         element.appendChild(cursor);
+//     }
+// }
 function afterClick(button) {
     for(let m of document.getElementsByClassName('multirow')) {
         if(m.reset) {
@@ -109,11 +120,10 @@ function afterClick(button) {
 
 function key(nimi) {
     let button = document.createElement('button');
-    button.innerHTML = '<span class="nimi">'+nimi+'</span>';
+    button.innerHTML = '<nimi>'+nimi+'</nimi>';
     button.classList.add('key');
     button.onclick = (event) => {
-        let n = type(nimi);
-        addClass(n, 'nimi');
+        type(nimi);
         afterClick(button);
     };
     return button;
@@ -134,13 +144,13 @@ function cartoucheKey() {
         cartouche.isCartouche = true;
         addClass(cartouche, 'nimi');
         cartouche.endCartouche = function() {
-            moveCursorAfter(cartouche);
+            //moveCursorAfter(cartouche);
             cartouche.innerHTML = cartouche.innerText+']';
             button.innerHTML = '[]';
             button.onclick = startCartouche;
         }
         button.innerHTML = 'pini';
-        moveCursorInto(cartouche);
+        //moveCursorInto(cartouche);
         button.onclick = cartouche.endCartouche;
     };
     button.onclick = startCartouche;
@@ -202,17 +212,11 @@ function setKeyboard(keyboard, rows) {
         keyboard.appendChild(row);
     }
 }
-function removeSelection() {
-    let allSelected = Array.from(document.getElementsByClassName('selected'));
-    for(let selected of allSelected) {
-        selected.classList.remove('selected');
-    }
-}
 function selectElements(parent, startIndex, endIndex) {
     for(let i = startIndex; i < endIndex + 1; i ++) {
         parent.children[i].classList.add('selected');
     }
-    removeCursor();
+    //removeCursor();
 }
 function calculateSelection(parentElement, startElement, endElement) {
     let sIndex = (startElement == 0) ? 0 : Array.prototype.indexOf.call(parentElement.children, startElement);
@@ -220,23 +224,24 @@ function calculateSelection(parentElement, startElement, endElement) {
     selectElements(parentElement, Math.min(sIndex, eIndex), Math.max(sIndex, eIndex));
 }
 function setupTextarea(element, checkValidFunction) {
-    element.addEventListener('click', function(event) {
-        if(checkValidFunction()) {
-            if(element.selecting) {
-                element.selecting = false;
-            } else {
-                removeSelection();
-                if(event.target == element) {
-                    moveCursorInto(element);
-                } else if(event.target.classList.contains('nimi')) {
-                    moveCursorAfter(event.target);
-                }
-            }
+    function getLastSpace(element) {
+        if(element.children.length == 0 || element.children[element.children.length - 1].innerText != ' ') {
+            element.appendChild(createWordSpan(' '));
         }
-    });
+        return element.children[element.children.length - 1];
+    }
+    function isNimi(element) {
+        if(!(element instanceof Element)) {return false;}
+        return element.classList.contains('nimi') || element.tagName == 'NIMI';
+    }
     element.addEventListener('pointerdown', function(event) {
         if(checkValidFunction()) {
-            if(event.target.classList.contains('nimi')) {
+            //console.log(event.target);
+            clearSelection();
+            if(event.target == element) {
+                select(getLastSpace(element));
+            } else if(isNimi(event.target)) {
+                select(event.target);
                 element.selectStart = event.target;
                 element.mouseDown = true;
             }
@@ -252,15 +257,15 @@ function setupTextarea(element, checkValidFunction) {
                 if(target == element.selectStart) {
                     target = document.elementFromPoint(event.clientX, event.clientY);
                 }
-                if(target.classList.contains('nimi')) {
+                if(isNimi(target)) {
                     element.selectEnd = target;
                     element.selecting = true;
-                    removeSelection();
+                    clearSelection();
                     calculateSelection(element, element.selectStart, element.selectEnd);
                 } else {
                     element.selectEnd = target;
                     element.selecting = true;
-                    removeSelection();
+                    clearSelection();
                     calculateSelection(element, element.selectStart, -1);
                 }
             }

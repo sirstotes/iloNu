@@ -2,8 +2,8 @@
 function switchTab(tab) {
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
-        removeCursor();
-        removeSelection();
+        //removeCursor();
+        clearSelection();
         currentTab.savedData = document.getElementById('textarea').innerHTML;
         currentTab.savedFont = document.getElementById('textarea').style.fontFamily;
         currentTab.id = '';
@@ -52,28 +52,26 @@ function switchTab(tab) {
     // } else {
         tab.insertBefore(weka, tab.children[0]);
     // }
-    moveCursorInto(document.getElementById('textarea'));
+    //moveCursorInto(document.getElementById('textarea'));
 }
 function tab(innerHTML) {
     let tab = document.createElement('div');
+    tab.addEventListener('click', function(event) {
+        if(tab.id != 'current_tab') {
+            switchTab(tab);
+        }
+    });
     tab.classList.add('tab');
     let name = document.createElement('button');
     name.innerHTML = innerHTML;
     name.classList.add('tab_name');
-    name.addEventListener('click', function(event) {
-        if(name.parentElement.id == 'current_tab') {
-            moveCursorInto(name);
-        } else {
-            switchTab(tab);
-        }
-    });
     setupTextarea(name, () => {tab.id == 'current_tab'});
     tab.appendChild(name);
     tab.savedData = '';
     return tab;
 }
 function newTab() {
-    let button = tab('<span class="nimi">lipu </span>');
+    let button = tab(createWordSpan('lipu').outerHTML);
     document.getElementById('new').before(button);
     switchTab(button);
 }
@@ -122,8 +120,8 @@ function loadTabs(store, db) {
 }
 function saveTabs(store) {
     console.log('Saving all files to database.');
-    removeCursor();
-    removeSelection();
+    //removeCursor();
+    clearSelection();
     for(let tab of document.getElementsByClassName('tab')) {
         tab.getElementsByClassName('tab_name')[0].style.fontStyle = '';
         if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
@@ -180,6 +178,7 @@ function getWebsiteFont() {
     return document.documentElement.style.fontFamily;
 }
 function setWebsiteFont(font) {
+    document.getElementById('fontSelect').value = font;
     document.documentElement.style.fontFamily = font;
 }
 function getDarkMode() {
@@ -224,7 +223,7 @@ function cutSelection() {
     copySelection();
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length > 0) {
-        moveCursorAfter(selection[0]);
+        //moveCursorAfter(selection[0]);
         for(let i = 0; i < selection.length; i ++) {
             selection[i].remove();
         }
@@ -234,18 +233,7 @@ async function pasteFromClipboard() {
     let text = await navigator.clipboard.readText();
     let div = document.createElement('div');
     div.innerHTML = text;
-    let elements = Array.from(div.children);
-
-    let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length > 0) {
-        moveCursorAfter(selection[0]);
-        for(let i = 0; i < selection.length; i ++) {
-            selection[i].remove();
-        }
-    }
-    for(let element of elements) {
-        getCursor().before(element);
-    }
+    putElements(Array.from(div.children));
 }
 
 document.addEventListener('wordTyped', (event) => {
