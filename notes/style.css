@@ -175,8 +175,8 @@ option {
         border-top-left-radius: var(--tabRadius);
         background-color: var(--secondary-button-color);
         color: var(--secondary-button-text-color);
-        margin-right: calc(var(--tabRadius) * -1);
-        background: linear-gradient(270deg, var(--secondary-button-shadow-color) 0%, var(--secondary-button-color) calc(var(--tabRadius)*2));
+        margin-right: calc(var(--tabRadius) * -1 - 2ex);
+        background: linear-gradient(270deg, var(--secondary-button-shadow-color) 2ex, var(--secondary-button-color) calc(2ex + var(--tabRadius)*2));
     }
     &#current_tab {
         transform: translate(0, 1px);
@@ -233,7 +233,7 @@ option {
             margin-left:  calc(var(--tabRadius) * -1);
         }
     }
-    button {
+    button, .tab_name {
         font-size: 25px;
         background: none;
         display: inline-block;

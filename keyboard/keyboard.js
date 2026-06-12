@@ -29,16 +29,29 @@ function createWordSpan(content) {
 function putElements(elements) {
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length == 0) {return;}
-    let lastElement = elements[elements.length - 1];
-    elements.forEach(e => selection[0].parentElement.insertBefore(e, selection[0]))
-    if (selection.length > 1) {
-        for(let i = 1; i < selection.length; i ++) {
-            selection[i].remove();
+    if(selection[0].parentElement.noWhitespace) {
+        elements.forEach(e => selection[0].after(e));
+        if (selection.length > 1 || (selection.length == 1 && !selection[0].classList.contains('single_selection'))) {
+            for(let i = 0; i < selection.length; i ++) {
+                selection[i].remove();
+            }
         }
-        if(lastElement.nextElementSibling == undefined) {
-            lastElement.parentElement.appendChild(select(createWordSpan(' ')));
-        } else {
-            select(lastElement.nextElementSibling);
+        clearSelection();
+        select(elements[elements.length - 1]);
+    } else {
+        elements.forEach(e => selection[0].parentElement.insertBefore(e, selection[0]));
+        if (selection.length > 1 || (selection.length == 1 && !selection[0].classList.contains('single_selection'))) {
+            for(let i = 0; i < selection.length; i ++) {
+                selection[i].remove();
+            }
+            let lastElement = elements[elements.length - 1];
+            if(lastElement.nextElementSibling == undefined) {
+                if(!lastElement.parentElement.noWhitespace) {
+                    lastElement.parentElement.appendChild(select(createWordSpan(' ')));
+                }
+            } else {
+                select(lastElement.nextElementSibling);
+            }
         }
     }
     const customEvent = new CustomEvent('wordsChanged', {
@@ -65,14 +78,18 @@ function backspace() {
     });
     document.dispatchEvent(customEvent);
     let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length == 1) {
+    if(selection.length == 1 && selection[0].classList.contains('single_selection')) {
         if(selection[0].previousElementSibling != undefined) {
            selection[0].previousElementSibling.remove();
         } 
     } else if(selection.length > 0) {
         //moveCursorAfter(selection[0]);
         if(selection[selection.length - 1].nextElementSibling == undefined) {
-           selection[selection.length - 1].parentElement.append(select(createWordSpan(' ')));
+            if(!selection[0].parentElement.noWhitespace) {
+                selection[selection.length - 1].parentElement.append(select(createWordSpan(' ')));
+            } else if (selection[0].parentElement.children.length == 1) {
+                selection[selection.length - 1].parentElement.append(select(createWordSpan('lipu')));
+            }
         } else {
             select(selection[selection.length - 1].nextElementSibling);
         }
@@ -84,6 +101,8 @@ function backspace() {
     // }
 }
 function newLine() {//TODO: Make spaces fill entire note, to end of scroll. No more <br> tags
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 0 && selection[0].parentElement.noWhitespace) {return;}
     putElements([document.createElement('br')]);
 }
 // function moveCursorAfter(element) {
@@ -236,23 +255,24 @@ function setupTextarea(element, checkValidFunction) {
     }
     element.addEventListener('pointerdown', function(event) {
         if(checkValidFunction()) {
-            //console.log(event.target);
             clearSelection();
+            let target;
             if(event.target == element) {
-                select(getLastSpace(element));
+                target = getLastSpace(element);
             } else if(isNimi(event.target)) {
-                select(event.target);
-                element.selectStart = event.target;
-                element.mouseDown = true;
+                target = event.target;
             }
+            select(target);
+            element.selectStart = target;
+            element.canDrag = true;
         }
     });
     element.addEventListener('pointerup', function(event) {
-        element.mouseDown = false;
+        element.canDrag = false;
     });
     element.addEventListener('pointermove', function(event) {
         if(checkValidFunction()) {
-            if(element.mouseDown && element.selectStart != undefined) {
+            if(element.canDrag) {
                 let target = event.target;
                 if(target == element.selectStart) {
                     target = document.elementFromPoint(event.clientX, event.clientY);

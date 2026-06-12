@@ -1,5 +1,6 @@
 // document.addEventListener('click', (e) => console.log(e.target));
 function switchTab(tab) {
+    if(tab.parentElement == undefined) {return}
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
         //removeCursor();
@@ -44,9 +45,6 @@ function switchTab(tab) {
             weka.readyToDelete = true;
         }
     });
-    function getChildIndex(node) {
-        return Array.from(node.parentNode.childNodes).indexOf(node);
-    }
     // if(getChildIndex(tab) < 4) {
     //     tab.append(weka);
     // } else {
@@ -62,10 +60,11 @@ function tab(innerHTML) {
         }
     });
     tab.classList.add('tab');
-    let name = document.createElement('button');
+    let name = document.createElement('div');
     name.innerHTML = innerHTML;
     name.classList.add('tab_name');
-    setupTextarea(name, () => {tab.id == 'current_tab'});
+    setupTextarea(name, () => tab.id == 'current_tab');
+    name.noWhitespace = true;
     tab.appendChild(name);
     tab.savedData = '';
     return tab;
@@ -85,14 +84,13 @@ function loadTab(title, id, data, font, db) {
     return button;
 }
 function removeTab(tab) {
-    //TODO: add confirmation popup!
     if(tab.id == 'current_tab') {
         document.getElementById('textarea').innerHTML = '';
     }
-    if(tab.previousElementSibling && tab.previousElementSibling.savedData) {
+    if(tab.previousElementSibling.tagName == 'DIV') {
         switchTab(tab.previousElementSibling);
-    } else if (tab.nextElementSibling && tab.nextElementSibling.savedData) {
-        switchTab(tab.nextElementSibling);
+    } else if (tab.nextElementSibling.tagName == 'DIV') {
+        switchTab(tab.nextElementSibling)
     }
     tab.remove();
     if(tab.hasOwnProperty('dbID')) {
@@ -144,7 +142,8 @@ function saveTabs(store) {
             }
             if(tab.savedData.length > 0) {//Only save if it has been changed
                 console.log("Adding new data");
-                store.add({title: tab.getElementsByClassName('tab_name')[0].innerHTML, data: tab.savedData, font: tab.savedFont});
+                const addReq = store.add({title: tab.getElementsByClassName('tab_name')[0].innerHTML, data: tab.savedData, font: tab.savedFont});
+                addReq.onsucces = (e) => {tab.dbID = e.target.result;}
             }
         }
     }
