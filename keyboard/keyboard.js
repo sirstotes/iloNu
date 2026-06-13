@@ -16,9 +16,19 @@ function clearSelection() {
     selection = Array.from(document.getElementsByClassName('single_selection'));
     selection.forEach(e => e.classList.remove('single_selection'));
 }
-function select(element) {
+function select(element, leftBorder, rightBorder) {
     element.classList.add('selected');
     element.classList.add('single_selection');
+    if(leftBorder/* && element.innerHTML != ' '*/) {//what was I thinking
+        element.classList.add('border_left');
+    } else {
+        element.classList.remove('border_left');
+    }
+    if(rightBorder/* && element.innerHTML != ' '*/) {
+        element.classList.add('border_right');
+    } else {
+        element.classList.remove('border_right');
+    }
     return element;
 }
 function createWordSpan(content) {
@@ -26,7 +36,7 @@ function createWordSpan(content) {
     span.innerHTML = content;
     return span;
 }
-function putElements(elements) {
+function putElements(elements) {//TODO: refactor to being right-left-insert, not this jumbled mess
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length == 0) {return;}
     if(selection[0].parentElement.noWhitespace) {
@@ -37,7 +47,7 @@ function putElements(elements) {
             }
         }
         clearSelection();
-        select(elements[elements.length - 1]);
+        select(elements[elements.length - 1], false, true);
     } else {
         elements.forEach(e => selection[0].parentElement.insertBefore(e, selection[0]));
         if (selection.length > 1 || (selection.length == 1 && !selection[0].classList.contains('single_selection'))) {
@@ -47,10 +57,10 @@ function putElements(elements) {
             let lastElement = elements[elements.length - 1];
             if(lastElement.nextElementSibling == undefined) {
                 if(!lastElement.parentElement.noWhitespace) {
-                    lastElement.parentElement.appendChild(select(createWordSpan(' ')));
+                    lastElement.parentElement.appendChild(select(createWordSpan(' '), true, false));
                 }
             } else {
-                select(lastElement.nextElementSibling);
+                select(lastElement.nextElementSibling, true, false);
             }
         }
     }
@@ -80,18 +90,21 @@ function backspace() {
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length == 1 && selection[0].classList.contains('single_selection')) {
         if(selection[0].previousElementSibling != undefined) {
-           selection[0].previousElementSibling.remove();
+            if(selection[0].parentElement.noWhitespace) {
+                select(selection[0].previousElementSibling, false, true);
+                selection[0].remove();
+            } else {
+                selection[0].previousElementSibling.remove();
+            }
         } 
     } else if(selection.length > 0) {
         //moveCursorAfter(selection[0]);
         if(selection[selection.length - 1].nextElementSibling == undefined) {
             if(!selection[0].parentElement.noWhitespace) {
-                selection[selection.length - 1].parentElement.append(select(createWordSpan(' ')));
-            } else if (selection[0].parentElement.children.length == 1) {
-                selection[selection.length - 1].parentElement.append(select(createWordSpan('lipu')));
+                selection[selection.length - 1].parentElement.append(select(createWordSpan(' '), false, true));
             }
         } else {
-            select(selection[selection.length - 1].nextElementSibling);
+            select(selection[selection.length - 1].nextElementSibling, true, false);
         }
         for(let i = 0; i < selection.length; i ++) {
             selection[i].remove();
@@ -257,12 +270,16 @@ function setupTextarea(element, checkValidFunction) {
         if(checkValidFunction()) {
             clearSelection();
             let target;
-            if(event.target == element) {
-                target = getLastSpace(element);
-            } else if(isNimi(event.target)) {
+            if(isNimi(event.target)) {
                 target = event.target;
+            } else if(event.target == element) {
+                if(element.children.length == 0 || !element.noWhitespace) {
+                    target = getLastSpace(element);
+                } else {
+                    target = element.children[element.children.length - 1];
+                }
             }
-            select(target);
+            select(target, !target.parentElement.noWhitespace, target.parentElement.noWhitespace);
             element.selectStart = target;
             element.canDrag = true;
         }
