@@ -175,7 +175,7 @@ option {
         border-top-left-radius: var(--tabRadius);
         background-color: var(--secondary-button-color);
         color: var(--secondary-button-text-color);
-        margin-right: calc(var(--tabRadius) * -1 - 2ex);
+        margin-right: calc(var(--tabRadius) * -1);
         background: linear-gradient(270deg, var(--secondary-button-shadow-color) 2ex, var(--secondary-button-color) calc(2ex + var(--tabRadius)*2));
     }
     &#current_tab {
@@ -201,6 +201,10 @@ option {
             cursor: auto;
         }
         color: var(--text-color);
+        .tab_name {
+            min-width: 5px;
+            min-height: 2ex;
+        }
         .tab_name:hover {
             cursor: text;
         }
@@ -310,15 +314,36 @@ nimi, .nimi {
     white-space:pre;
 }
 .selected:not(.single_selection) {
-    background-color: var(--yellow-accent-color) !important;
+    background-color: var(--loje) !important;
+}
+@keyframes blink_left {
+    0%   { box-shadow: inset 3px 0 var(--border-color); }
+    49%  { box-shadow: inset 3px 0 var(--border-color); }
+    50%  { box-shadow: none; }
+    100% { box-shadow: none; }
+}
+@keyframes blink_right {
+    0%   { box-shadow: inset -3px 0 var(--border-color); }
+    49%  { box-shadow: inset -3px 0 var(--border-color); }
+    50%  { box-shadow: none; }
+    100% { box-shadow: none; }
 }
 .single_selection {
     animation: blink_selection 1s linear infinite;
-}
-@keyframes blink_selection {
-    0%   { background-color: var(--yellow-accent-color) !important; }
-    49%  { background-color: var(--yellow-accent-color) !important; }
-    50%  { background: inherit; }
-    100% { background: inherit; }
+    --border-color: var(--text-color);
+    &.border_left {
+        box-shadow: inset 3px 0 var(--border-color);
+        animation: blink_left 1s linear infinite;
+    }
+    &.border_right {
+        box-shadow: inset -3px 0 var(--border-color);
+        animation: blink_right 1s linear infinite;
+    }
+    /* &:not(.border_left) {
+        &:not(.border_right) {
+            background-color: var(--yellow-accent-color) !important;
+            animation: blink 1s linear infinite;
+        }
+    } */
 }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
