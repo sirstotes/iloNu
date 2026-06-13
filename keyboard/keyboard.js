@@ -89,7 +89,16 @@ function backspace() {
     document.dispatchEvent(customEvent);
     let selection = Array.from(document.getElementsByClassName('selected'));
     if(selection.length == 1 && selection[0].classList.contains('single_selection')) {
-        if(selection[0].previousElementSibling != undefined) {
+        if(selection[0].previousElementSibling == undefined) {
+            if(selection[0].parentElement.children.length > 1) {
+                if(selection[0].parentElement.noWhitespace) {
+                    select(selection[0].nextElementSibling, false, true);
+                    selection[0].remove();
+                } else {
+                    selection[0].previousElementSibling.remove();
+                }
+            }
+        } else {
             if(selection[0].parentElement.noWhitespace) {
                 select(selection[0].previousElementSibling, false, true);
                 selection[0].remove();

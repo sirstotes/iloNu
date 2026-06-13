@@ -143,7 +143,7 @@ function saveTabs(store) {
             if(tab.savedData.length > 0) {//Only save if it has been changed
                 console.log("Adding new data");
                 const addReq = store.add({title: tab.getElementsByClassName('tab_name')[0].innerHTML, data: tab.savedData, font: tab.savedFont});
-                addReq.onsucces = (e) => {tab.dbID = e.target.result;}
+                addReq.onsuccess = (e) => {tab.dbID = e.target.result;}
             }
         }
     }
@@ -188,6 +188,22 @@ function setDarkMode(bool) {
 }
 function toggleDarkMode() {
     setDarkMode(!getDarkMode());
+}
+function getInputStyle(property) {//TODO: Refactor cursor style system
+    return document.documentElement.style.getPropertyValue("--"+property);
+}
+function setInputStyle(property, value) {
+    document.documentElement.style.setProperty("--"+property, value);
+    for(let e of document.getElementsByClassName('selected')) {
+        e.style.setProperty(property, value);
+    }
+}
+function toggleInputStyle(property, onValue, offValue) {
+    if(document.documentElement.style.getPropertyValue("--"+property) == onValue) {
+        setInputStyle(property, offValue);
+    } else {
+        setInputStyle(property, onValue);
+    }
 }
 function getInputColor() {
     return document.documentElement.style.getPropertyValue("--input-text-color");
