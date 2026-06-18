@@ -1,73 +1,50 @@
-
-// function getCursor() {
-//     if(document.getElementById('cursor')) {
-//         return document.getElementById('cursor');
-//     }
-//     let cursor = document.createElement('cursor');
-//     cursor.id = 'cursor';
-//     return cursor
-// }
-// function removeCursor() {
-//     getCursor().remove();
-// }
 function clearSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));
     selection.forEach(e => e.classList.remove('selected'));
-    selection = Array.from(document.getElementsByClassName('single_selection'));
-    selection.forEach(e => e.classList.remove('single_selection'));
 }
-function select(element, leftBorder, rightBorder) {
-    element.classList.add('selected');
-    element.classList.add('single_selection');
-    if(leftBorder/* && element.innerHTML != ' '*/) {//what was I thinking
-        element.classList.add('border_left');
-    } else {
-        element.classList.remove('border_left');
-    }
-    if(rightBorder/* && element.innerHTML != ' '*/) {
-        element.classList.add('border_right');
-    } else {
-        element.classList.remove('border_right');
-    }
-    return element;
+function clearCursors() {
+    Array.from(document.getElementsByClassName('cursor_before')).forEach(e => e.classList.remove('cursor_before'));
+    Array.from(document.getElementsByClassName('cursor_after')).forEach(e => e.classList.remove('cursor_after'));
+    Array.from(document.getElementsByClassName('cursor_inside')).forEach(e => e.classList.remove('cursor_inside'));
+}
+function eraseSelection() {
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    selection.forEach(e => e.remove());
 }
 function createWordSpan(content) {
     let span = document.createElement('nimi');
     span.innerHTML = content;
     return span;
 }
-function putElements(elements) {//TODO: refactor to being right-left-insert, not this jumbled mess
-    let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length == 0) {return;}
-    if(selection[0].parentElement.noWhitespace) {
-        elements.forEach(e => selection[0].after(e));
-        if (selection.length > 1 || (selection.length == 1 && !selection[0].classList.contains('single_selection'))) {
-            for(let i = 0; i < selection.length; i ++) {
-                selection[i].remove();
-            }
-        }
-        clearSelection();
-        select(elements[elements.length - 1], false, true);
+function putElements(elements) {
+    let lastElement;
+    let selection = document.getElementsByClassName('selected');
+    if(selection.length > 0) {
+        const firstInSelection = selection[0];
+        elements.forEach(e => firstInSelection.before(e));//Insert each new element before the selection
+        eraseSelection();
+        lastElement = elements[elements.length - 1];
     } else {
-        elements.forEach(e => selection[0].parentElement.insertBefore(e, selection[0]));
-        if (selection.length > 1 || (selection.length == 1 && !selection[0].classList.contains('single_selection'))) {
-            for(let i = 0; i < selection.length; i ++) {
-                selection[i].remove();
+        Array.from(document.getElementsByClassName('cursor_before')).forEach(cursor => {
+            lastElement = elements[elements.length - 1];
+            elements.forEach(newElement => cursor.before(newElement));
+        });
+        Array.from(document.getElementsByClassName('cursor_after')).forEach(cursor => {
+            lastElement = elements[elements.length - 1];
+            for(let i = elements.length - 1; i > -1; i --) {
+                cursor.after(elements[i]);
             }
-            let lastElement = elements[elements.length - 1];
-            if(lastElement.nextElementSibling == undefined) {
-                if(!lastElement.parentElement.noWhitespace) {
-                    lastElement.parentElement.appendChild(select(createWordSpan(' '), true, false));
-                }
-            } else {
-                select(lastElement.nextElementSibling, true, false);
-            }
-        }
+        });
+        Array.from(document.getElementsByClassName('cursor_inside')).forEach(cursor => {
+            lastElement = elements[elements.length - 1];
+            elements.forEach(newElement => cursor.appendChild(newElement));
+        });
     }
-    const customEvent = new CustomEvent('wordsChanged', {
-        bubbles: true,
-        cancelable: true
-    });
+    clearCursors();
+    if(lastElement != undefined) {
+        lastElement.classList.add('cursor_after');
+    }
+    const customEvent = new CustomEvent('wordsChanged', {bubbles: true, cancelable: true});
     document.dispatchEvent(customEvent);
 }
 function type(word) {
@@ -82,84 +59,85 @@ function type(word) {
     return span;
 }
 function backspace() {
-    const customEvent = new CustomEvent('wordsChanged', {
-        bubbles: true,
-        cancelable: true
-    });
+    let hasReplacedCursor = false;
+    let textArea;
+    let selection = document.getElementsByClassName('selected');
+    if(selection.length > 0) {
+        textArea = selection[0].parentElement;
+        if(selection[0].previousElementSibling != undefined) {
+            hasReplacedCursor = true;
+            selection[0].previousElementSibling.classList.add('cursor_after');
+        } else if (selection[selection.length - 1].nextElementSibling != undefined) {
+            hasReplacedCursor = true;
+            selection[selection.length - 1].nextElementSibling.classList.add('cursor_before');
+        } else if (selection[0].parentElement.tagName == 'CARTOUCHE') {
+            hasReplacedCursor = true;
+            selection[0].parentElement.classList.add('cursor_inside');
+        }
+        eraseSelection();
+    } else {
+        Array.from(document.getElementsByClassName('cursor_after')).forEach(cursor => {
+            textArea = cursor.parentElement;
+            if(cursor.previousElementSibling != undefined) {
+                hasReplacedCursor = true;
+                cursor.previousElementSibling.classList.add('cursor_after');
+            } else if (cursor.nextElementSibling != undefined) {
+                hasReplacedCursor = true;
+                cursor.nextElementSibling.classList.add('cursor_before');
+            } else if (cursor.parentElement.tagName == 'CARTOUCHE') {
+                hasReplacedCursor = true;
+                cursor.parentElement.classList.add('cursor_inside');
+            }
+            cursor.remove();
+        });
+        Array.from(document.getElementsByClassName('cursor_before')).forEach(cursor => {
+            textArea = cursor.parentElement;
+            hasReplacedCursor = true;
+            if(cursor.previousElementSibling != undefined) {
+                cursor.previousElementSibling.remove();
+            }
+        });
+        Array.from(document.getElementsByClassName('cursor_inside')).forEach(cursor => {
+            textArea = cursor.parentElement;
+            if(cursor.previousElementSibling != undefined) {
+                hasReplacedCursor = true;
+                cursor.previousElementSibling.classList.add('cursor_after');
+            } else if (cursor.nextElementSibling != undefined) {
+                hasReplacedCursor = true;
+                cursor.nextElementSibling.classList.add('cursor_before');
+            } else if (cursor.parentElement.tagName == 'CARTOUCHE') {
+                hasReplacedCursor = true;
+                cursor.parentElement.classList.add('cursor_inside');
+            }
+            cursor.remove();
+        });
+    }
+    if(!hasReplacedCursor && textArea != undefined) {
+        if(textArea.children.length == 0) {
+            let newSpan = createWordSpan(' ');
+            newSpan.classList.add('cursor_before');
+            textArea.appendChild(newSpan);
+        } else {
+            textArea.children[textArea.children.length-1].classList.add('cursor_after');
+        }
+    }
+    const customEvent = new CustomEvent('wordsChanged', {bubbles: true, cancelable: true});
     document.dispatchEvent(customEvent);
-    let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length == 1 && selection[0].classList.contains('single_selection')) {
-        if(selection[0].previousElementSibling == undefined) {
-            if(selection[0].parentElement.children.length > 1) {
-                if(selection[0].parentElement.noWhitespace) {
-                    select(selection[0].nextElementSibling, false, true);
-                    selection[0].remove();
-                } else {
-                    selection[0].previousElementSibling.remove();
-                }
-            }
-        } else {
-            if(selection[0].parentElement.noWhitespace) {
-                select(selection[0].previousElementSibling, false, true);
-                selection[0].remove();
-            } else {
-                selection[0].previousElementSibling.remove();
-            }
-        } 
-    } else if(selection.length > 0) {
-        //moveCursorAfter(selection[0]);
-        if(selection[selection.length - 1].nextElementSibling == undefined) {
-            if(!selection[0].parentElement.noWhitespace) {
-                selection[selection.length - 1].parentElement.append(select(createWordSpan(' '), false, true));
-            }
-        } else {
-            select(selection[selection.length - 1].nextElementSibling, true, false);
-        }
-        for(let i = 0; i < selection.length; i ++) {
-            selection[i].remove();
-        }
-    }// else if(getCursor().previousElementSibling) {
-    //     getCursor().previousElementSibling.remove();
-    // }
 }
 function newLine() {//TODO: Make spaces fill entire note, to end of scroll. No more <br> tags
-    let selection = Array.from(document.getElementsByClassName('selected'));
+    let selection = document.getElementsByClassName('selected');
     if(selection.length > 0 && selection[0].parentElement.noWhitespace) {return;}
     putElements([document.createElement('br')]);
 }
-// function moveCursorAfter(element) {
-//     let cursor = getCursor();
-//     if(cursor.parentElement) {
-//         if(cursor.parentElement != element && cursor.parentElement.isCartouche && cursor.parentElement != element.parentElement) {
-//             cursor.parentElement.endCartouche();
-//         }
-//         cursor.parentElement.removeChild(cursor);
-//     }
-//     element.after(cursor);
-// }
-// function moveCursorInto(element) {
-//     let cursor = getCursor();
-//     if(cursor.parentElement) {
-//         if(cursor.parentElement != element && cursor.parentElement.isCartouche && cursor.parentElement != element.parentElement) {
-//             cursor.parentElement.endCartouche();
-//         }
-//         cursor.parentElement.removeChild(cursor);
-//     }
-//     if(arguments[1] != undefined) {
-//         element.childNodes[arguments[1] - 1].after(cursor);
-//     } else {
-//         element.appendChild(cursor);
-//     }
-// }
-function afterClick(button) {
-    for(let m of document.getElementsByClassName('multirow')) {
-        if(m.reset) {
-            m.goToRow(0);
+
+function createKeyButton(nimi) {
+    function afterClick(button) {
+        for(let m of document.getElementsByClassName('multirow')) {
+            if(m.reset) {
+                m.goToRow(0);
+            }
         }
     }
-}
-
-function key(nimi) {
     let button = document.createElement('button');
     button.innerHTML = '<nimi>'+nimi+'</nimi>';
     button.classList.add('key');
@@ -169,30 +147,22 @@ function key(nimi) {
     };
     return button;
 }
-function functionKey(nimi, onclick) {
+function createFunctionButton(nimi, onclick) {
     let button = document.createElement('button');
     button.innerHTML = nimi;
     button.classList.add('key', 'function_key');
     button.onclick = onclick;
     return button;
 }
-function cartoucheKey() {
+function createCartoucheButton() {
     let button = document.createElement('button');
     button.innerHTML = '[]';
     button.classList.add('key', 'function_key');
     let startCartouche = function() {
-        let cartouche = type('[');
-        cartouche.isCartouche = true;
-        addClass(cartouche, 'nimi');
-        cartouche.endCartouche = function() {
-            //moveCursorAfter(cartouche);
-            cartouche.innerHTML = cartouche.innerText+']';
-            button.innerHTML = '[]';
-            button.onclick = startCartouche;
-        }
-        button.innerHTML = 'pini';
-        //moveCursorInto(cartouche);
-        button.onclick = cartouche.endCartouche;
+        let cartouche = document.createElement('cartouche');
+        putElements([cartouche]);
+        clearCursors();
+        cartouche.classList.add('cursor_inside');
     };
     button.onclick = startCartouche;
     return button;
@@ -204,12 +174,16 @@ function keyboardRow() {
         if(arg instanceof Node) {
             div.appendChild(arg);
         } else {
-            div.appendChild(key(arg));
+            div.appendChild(createKeyButton(arg));
         }
     }
     return div;
 }
 function multiRow(rows, height, controls, reset) {
+    function stylize(element, key, value) {
+        element.style[key] = value;
+        return element;
+    }
     let div = document.createElement('div');
     div.classList.add('keyrow', 'multirow');
     div.style.flexGrow = 2;
@@ -217,13 +191,14 @@ function multiRow(rows, height, controls, reset) {
     div.reset = reset;
     div.row = 0;
     if(controls) {
-        div.appendChild(stylize(functionKey('pini', () => {div.goToRow(div.row - 1)}), 'flexGrow', 0));
+        div.appendChild(stylize(createFunctionButton('pini', () => {div.goToRow(div.row - 1)}), 'flexGrow', 0));
     }
-    let mrc = addClass(document.createElement('div'), 'multirow_container');
+    let mrc = document.createElement('div');
+    mrc.classList.add('multirow_container');
     setKeyboard(mrc, rows.slice(0, height));
     div.appendChild(mrc);
     if(controls) {
-        div.appendChild(stylize(functionKey('kama', () => {div.goToRow(div.row + 1)}), 'flexGrow', 0));
+        div.appendChild(stylize(createFunctionButton('kama', () => {div.goToRow(div.row + 1)}), 'flexGrow', 0));
     }
 
     div.goToRow = function(row, height) {
@@ -239,13 +214,15 @@ function multiRowGoTo(row, height) {
         event.target.parentNode.parentNode.parentNode.goToRow(row, height);
     };
 }
-function addClass(element, c) {
-    element.classList.add(c);
-    return element;
-}
-function stylize(element, key, value) {
-    element.style[key] = value;
-    return element;
+function getMultirowAndGoTo(multiIndex, row, height) {
+    return (event) => {
+        let mr = document.getElementById('keyboard').getElementsByClassName('multirow')[multiIndex];
+        if(mr.row == row) {
+            mr.goToRow(0);
+        } else {
+            mr.goToRow(row, height);
+        }
+    }
 }
 function setKeyboard(keyboard, rows) {
     keyboard.innerHTML = '';
@@ -253,43 +230,50 @@ function setKeyboard(keyboard, rows) {
         keyboard.appendChild(row);
     }
 }
-function selectElements(parent, startIndex, endIndex) {
-    for(let i = startIndex; i < endIndex + 1; i ++) {
-        parent.children[i].classList.add('selected');
-    }
-    //removeCursor();
-}
-function calculateSelection(parentElement, startElement, endElement) {
-    let sIndex = (startElement == 0) ? 0 : Array.prototype.indexOf.call(parentElement.children, startElement);
-    let eIndex = (endElement == -1) ? parentElement.children.length - 1 : Array.prototype.indexOf.call(parentElement.children, endElement);
-    selectElements(parentElement, Math.min(sIndex, eIndex), Math.max(sIndex, eIndex));
-}
 function setupTextarea(element, checkValidFunction) {
-    function getLastSpace(element) {
-        if(element.children.length == 0 || element.children[element.children.length - 1].innerText != ' ') {
-            element.appendChild(createWordSpan(' '));
-        }
-        return element.children[element.children.length - 1];
-    }
-    function isNimi(element) {
-        if(!(element instanceof Element)) {return false;}
-        return element.classList.contains('nimi') || element.tagName == 'NIMI';
-    }
     element.addEventListener('pointerdown', function(event) {
         if(checkValidFunction()) {
+            let hasCursorBefore = event.target.classList.contains('cursor_before');
+            let hasCursorAfter = event.target.classList.contains('cursor_after');
             clearSelection();
+            clearCursors();
             let target;
-            if(isNimi(event.target)) {
-                target = event.target;
-            } else if(event.target == element) {
-                if(element.children.length == 0 || !element.noWhitespace) {
-                    target = getLastSpace(element);
+            if(event.target == element) {
+                if(element.children.length == 0) {
+                    target = createWordSpan(' ');
+                    target.classList.add('cursor_before');
+                    element.appendChild(target);
                 } else {
                     target = element.children[element.children.length - 1];
+                    target.classList.add('cursor_after');
+                }
+            } else {
+                target = event.target;
+                let center = target.offsetWidth / 2;
+                if (event.offsetX > center) {
+                    if(hasCursorAfter) {
+                        if(event.target.tagName == 'CARTOUCHE' && event.target.children.length == 0) {
+                            target.classList.add('cursor_inside');
+                        } else {
+                            target.classList.add('selected');
+                        }
+                    } else {
+                        target.classList.add('cursor_after');
+                    }
+                } else {
+                    if(hasCursorBefore) {
+                        if(event.target.tagName == 'CARTOUCHE' && event.target.children.length == 0) {
+                            target.classList.add('cursor_inside');
+                        } else {
+                            target.classList.add('selected');
+                        }
+                    } else {
+                        target.classList.add('cursor_before');
+                    }
                 }
             }
-            select(target, !target.parentElement.noWhitespace, target.parentElement.noWhitespace);
             element.selectStart = target;
+            element.dragStartY = event.clientY;
             element.canDrag = true;
         }
     });
@@ -297,72 +281,65 @@ function setupTextarea(element, checkValidFunction) {
         element.canDrag = false;
     });
     element.addEventListener('pointermove', function(event) {
+        function calculateSelection(parentElement, startElement, endElement) {
+            let sIndex = (startElement == 0) ? 0 : Array.prototype.indexOf.call(parentElement.children, startElement);
+            let eIndex = (endElement == -1) ? parentElement.children.length - 1 : Array.prototype.indexOf.call(parentElement.children, endElement);
+            
+            for(let i = Math.max(Math.min(sIndex, eIndex), 0); i < Math.min(Math.max(sIndex, eIndex), parentElement.children.length) + 1; i ++) {
+                parentElement.children[i].classList.add('selected');
+            }
+        }
         if(checkValidFunction()) {
             if(element.canDrag) {
                 let target = event.target;
-                if(target == element.selectStart) {
+                if(target == element.selectStart) {//Update the target if you drag off of it
                     target = document.elementFromPoint(event.clientX, event.clientY);
                 }
-                if(isNimi(target)) {
-                    element.selectEnd = target;
+                if(target.parentElement.tagName == 'CARTOUCHE' && element.selectStart.parentElement.tagName != 'CARTOUCHE') {
+                    target = target.parentElement;
+                }
+                if(event.target == element) {
                     element.selecting = true;
                     clearSelection();
-                    calculateSelection(element, element.selectStart, element.selectEnd);
+                    clearCursors();
+                    if (event.clientY > element.dragStartY) {//Select to the end if you drag down
+                        calculateSelection(element.selectStart.parentElement, element.selectStart, -1);
+                    } else {
+                        calculateSelection(element.selectStart.parentElement, 0, element.selectStart);
+                    }
                 } else {
-                    element.selectEnd = target;
                     element.selecting = true;
                     clearSelection();
-                    calculateSelection(element, element.selectStart, -1);
+                    clearCursors();
+                    calculateSelection(element.selectStart.parentElement, element.selectStart, target);
                 }
             }
         }
     });
 }
-let latinRows = [keyboardRow('la', 'en', 'li', 'o', 'e', 'pi', 'ala', 'seme', functionKey('o weka', backspace)),
-            keyboardRow('mi', 'sina', 'ona', 'ni', 'lon', 'tawa', 'tan', 'kepeken', 'sama'),
-            multiRow([keyboardRow(functionKey('A', multiRowGoTo(2, 1)), functionKey('E', multiRowGoTo(3, 1)), functionKey('I', multiRowGoTo(4, 1)), functionKey('J', multiRowGoTo(5, 1)), functionKey('K', multiRowGoTo(6)), functionKey('L', multiRowGoTo(8)), functionKey('M', multiRowGoTo(10))),
-                    keyboardRow(functionKey('N', multiRowGoTo(12, 1)), functionKey('O', multiRowGoTo(13, 1)), functionKey('P', multiRowGoTo(14)), functionKey('S', multiRowGoTo(16)), functionKey('T', multiRowGoTo(18, 1)), functionKey('U', multiRowGoTo(19, 1)), functionKey('W', multiRowGoTo(20, 1))),
-                    keyboardRow('a', 'akesi', 'ala', 'alasa', 'ale', 'anpa', 'ante', 'anu', 'awen'), 
-                    keyboardRow('e', 'en', 'esun'),
-                    keyboardRow('ijo', 'ike', 'ilo', 'insa'),
-                    keyboardRow('jaki', 'jan', 'jelo', 'jo'), 
-                    keyboardRow('kala', 'kalama', 'kama', 'kasi', 'ken', 'kepeken', 'kijetesantakalu'),
-                    keyboardRow('kili', 'kin', 'kiwen', 'ko', 'kon', 'kule', 'kulupu', 'kute'),
-                    keyboardRow('la', 'lape', 'laso', 'lawa', 'leko', 'len', 'lete', 'li'),
-                    keyboardRow('lili', 'linja', 'lipu', 'loje', 'lon', 'luka', 'lukin', 'lupa'), 
-                    keyboardRow('ma', 'mama', 'mani', 'meli', 'meso', 'mi', 'mije', 'misikeke'),
-                    keyboardRow('moku', 'moli', 'monsi', 'monsuta', 'mu', 'mun', 'musi', 'mute'), 
-                    keyboardRow('n', 'namako', 'nanpa', 'nasa', 'nasin', 'nena', 'ni', 'nimi', 'noka'), 
-                    keyboardRow('o', 'olin', 'ona', 'open'),
-                    keyboardRow('pakala', 'pali', 'palisa', 'pan', 'pana', 'pi', 'pilin'),
-                    keyboardRow('pimeja', 'pini', 'pipi', 'poka', 'poki', 'pona'),
-                    keyboardRow('sama', 'seli', 'selo', 'seme', 'sewi', 'sijelo', 'sike', 'sin', 'sina'),
-                    keyboardRow('sinpin', 'sitelen', 'soko', 'sona', 'soweli', 'suli', 'suno', 'supa', 'suwi'),
-                    keyboardRow('tan', 'taso', 'tawa', 'telo', 'tenpo', 'toki', 'tomo', 'tonsi', 'tu'),
-                    keyboardRow('unpa', 'uta', 'utala'),
-                    keyboardRow('walo', 'wan', 'waso', 'wawa', 'weka', 'wile')], 2, false, true),
-            keyboardRow(cartoucheKey(), '{', '}', 'te', 'to', ' ', ':', '.', functionKey('linja sin', newLine))];
-let UCSURRows = [keyboardRow('󱤡', '󱤊', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '󱥙', functionKey('󱥄​󱥶', backspace)),
+let UCSURRows = [keyboardRow('󱤡', '󱤊', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '󱥙', createFunctionButton('󱥄​󱥶', backspace)),//TODO: Press and hold for alt glyphs
             keyboardRow('󱤴', '󱥞', '󱥆', '󱥁', '󱤬', '󱥩', '󱥧', '󱤙', '󱥖'),
-            multiRow([keyboardRow(functionKey('A', multiRowGoTo(2, 1)), functionKey('E', multiRowGoTo(3, 1)), functionKey('I', multiRowGoTo(4, 1)), functionKey('J', multiRowGoTo(5, 1)), functionKey('K', multiRowGoTo(6)), functionKey('L', multiRowGoTo(8)), functionKey('M', multiRowGoTo(10))),
-                    keyboardRow(functionKey('N', multiRowGoTo(12, 1)), functionKey('O', multiRowGoTo(13, 1)), functionKey('P', multiRowGoTo(14)), functionKey('S', multiRowGoTo(16)), functionKey('T', multiRowGoTo(18, 1)), functionKey('U', multiRowGoTo(19, 1)), functionKey('W', multiRowGoTo(20, 1))),
-                    keyboardRow('󱤀', '󱤁', '󱤂', '󱤃', '󱤄', '󱤅', '󱤆', '󱤇', '󱤈'), 
-                    keyboardRow('󱤉', '󱤊', '󱤋'),
-                    keyboardRow('󱤌', '󱤍', '󱤎', '󱤏'),
-                    keyboardRow('󱤐', '󱤑', '󱤒', '󱤓'), 
-                    keyboardRow('󱤔', '󱤕', '󱤖', '󱤗', '󱤘', '󱤙', '󱦀'),
-                    keyboardRow('󱤚', '󱥹', '󱤛', '󱤜', '󱤝', '󱤞', '󱤟', '󱤠'),
-                    keyboardRow('󱤡', '󱤢', '󱤣', '󱤤', '󱥼', '󱤥', '󱤦', '󱤧'),
-                    keyboardRow('󱤨', '󱤩', '󱤪', '󱤫', '󱤬', '󱤭', '󱤮', '󱤯'), 
-                    keyboardRow('󱤰', '󱤱', '󱤲', '󱤳', '󱦂', '󱤴', '󱤵', '󱦇'),
-                    keyboardRow('󱤶', '󱤷', '󱤸', '󱥽', '󱤹', '󱤺', '󱤻', '󱤼'), 
-                    keyboardRow('󱦆', '󱥸', '󱤽', '󱤾', '󱤿', '󱥀', '󱥁', '󱥂', '󱥃'), 
-                    keyboardRow('󱥄', '󱥅', '󱥆', '󱥇'),
-                    keyboardRow('󱥈', '󱥉', '󱥊', '󱥋', '󱥌', '󱥍', '󱥎'),
-                    keyboardRow('󱥏', '󱥐', '󱥑', '󱥒', '󱥓', '󱥔'),
-                    keyboardRow('󱥖', '󱥗', '󱥘', '󱥙', '󱥚', '󱥛', '󱥜', '󱥝', '󱥞'),
-                    keyboardRow('󱥟', '󱥠', '󱦁', '󱥡', '󱥢', '󱥣', '󱥤', '󱥥', '󱥦'),
-                    keyboardRow('󱥧', '󱥨', '󱥩', '󱥪', '󱥫', '󱥬', '󱥭', '󱥾', '󱥮'),
-                    keyboardRow('󱥯', '󱥰', '󱥱'),
-                    keyboardRow('󱥲', '󱥳', '󱥴', '󱥵', '󱥶', '󱥷')], 2, false, true),
-            keyboardRow(cartoucheKey(), '{', '}', 'te', 'to', ' ', ':', '.', functionKey('linja sin', newLine))];
+            multiRow([keyboardRow(createFunctionButton('A', multiRowGoTo(2, 1)), createFunctionButton('E', multiRowGoTo(3, 1)), createFunctionButton('I', multiRowGoTo(4, 1)), createFunctionButton('J', multiRowGoTo(5, 1)), createFunctionButton('K', multiRowGoTo(6)), createFunctionButton('L', multiRowGoTo(8)), createFunctionButton('M', multiRowGoTo(10))),
+                    keyboardRow(createFunctionButton('N', multiRowGoTo(12, 1)), createFunctionButton('O', multiRowGoTo(13, 1)), createFunctionButton('P', multiRowGoTo(14)), createFunctionButton('S', multiRowGoTo(16)), createFunctionButton('T', multiRowGoTo(18, 1)), createFunctionButton('U', multiRowGoTo(19, 1)), createFunctionButton('W', multiRowGoTo(20, 1))),
+                    keyboardRow('󱤀', '󱤁', '󱤂', '󱤃', '󱤄', '󱤅', '󱤆', '󱤇', '󱤈'),//A
+                    keyboardRow('󱤉', '󱤊', '󱤋'),//E
+                    keyboardRow('󱤌', '󱤍', '󱤎', '󱤏'),//I
+                    keyboardRow('󱤐', '󱤑', '󱤒', '󱤓'),//J
+                    keyboardRow('󱤔', '󱤕', '󱤖', '󱤗', '󱤘', '󱤙', '󱦀', '󱤚'),//K
+                    keyboardRow('󱥹', '󱤛', '󱤜', '󱤝', '󱤞', '󱤟', '󱤠', '󱦥'),//K
+                    keyboardRow('󱤡', '󱤢', '󱤣', '󱤤', '󱥼', '󱤥', '󱤦', '󱤧'),//L
+                    keyboardRow('󱤨', '󱤩', '󱤪', '󱤫', '󱤬', '󱤭', '󱤮', '󱤯'),//L
+                    keyboardRow('󱤰', '󱤱', '󱤲', '󱤳', '󱦂', '󱤴', '󱤵', '󱦇'),//M
+                    keyboardRow('󱤶', '󱤷', '󱤸', '󱥽', '󱤹', '󱤺', '󱤻', '󱤼'),//M
+                    keyboardRow('󱦆', '󱥸', '󱤽', '󱤾', '󱤿', '󱥀', '󱥁', '󱥂', '󱥃'),//N
+                    keyboardRow('󱥄', '󱥅', '󱥆', '󱥇'),//O
+                    keyboardRow('󱥈', '󱥉', '󱥊', '󱥋', '󱥌', '󱥍', '󱥎'),//P
+                    keyboardRow('󱥏', '󱥐', '󱥑', '󱥒', '󱥓', '󱥔'),//P
+                    keyboardRow('󱥖', '󱥗', '󱥘', '󱥙', '󱥚', '󱥛', '󱥜', '󱥝', '󱥞'),//S
+                    keyboardRow('󱥟', '󱥠', '󱦁', '󱥡', '󱥢', '󱥣', '󱥤', '󱥥', '󱥦'),//S
+                    keyboardRow('󱥧', '󱥨', '󱥩', '󱥪', '󱥫', '󱥬', '󱥭', '󱥾', '󱥮'),//T
+                    keyboardRow('󱥯', '󱥰', '󱥱'),//U
+                    keyboardRow('󱥲', '󱥳', '󱥴', '󱥵', '󱥶', '󱥷'),//W
+                    keyboardRow('{', '}', '(', ')', '[', ']'),
+                    keyboardRow('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')], 2, false, true),
+            keyboardRow(createCartoucheButton(), createFunctionButton('󱤆', getMultirowAndGoTo(0, 21, 2)), 'te', 'to', ' ', '󱤀', ':', '.', createFunctionButton('linja sin', newLine))];

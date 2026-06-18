@@ -1,9 +1,7 @@
-// document.addEventListener('click', (e) => console.log(e.target));
 function switchTab(tab) {
     if(tab.parentElement == undefined) {return}
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
-        //removeCursor();
         clearSelection();
         currentTab.savedData = document.getElementById('textarea').innerHTML;
         currentTab.savedFont = document.getElementById('textarea').style.fontFamily;
@@ -45,12 +43,7 @@ function switchTab(tab) {
             weka.readyToDelete = true;
         }
     });
-    // if(getChildIndex(tab) < 4) {
-    //     tab.append(weka);
-    // } else {
-        tab.insertBefore(weka, tab.children[0]);
-    // }
-    //moveCursorInto(document.getElementById('textarea'));
+    tab.insertBefore(weka, tab.children[0]);
 }
 function tab(innerHTML) {
     let tab = document.createElement('div');
@@ -118,8 +111,9 @@ function loadTabs(store, db) {
 }
 function saveTabs(store) {
     console.log('Saving all files to database.');
-    //removeCursor();
     clearSelection();
+    clearCursors();
+    let textAreaInnerHTML = document.getElementById('textarea').innerHTML;
     for(let tab of document.getElementsByClassName('tab')) {
         tab.getElementsByClassName('tab_name')[0].style.fontStyle = '';
         if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
@@ -128,7 +122,7 @@ function saveTabs(store) {
                 const data = event.target.result;
                 data.title = tab.getElementsByClassName('tab_name')[0].innerHTML;
                 if(tab.id == 'current_tab') {
-                    tab.savedData = document.getElementById('textarea').innerHTML;
+                    tab.savedData = textAreaInnerHTML;
                     tab.savedFont = document.getElementById('textarea').style.fontFamily;
                 }
                 data.data = tab.savedData;
@@ -137,7 +131,7 @@ function saveTabs(store) {
             }
         } else {//Otherwise create a new entry
             if(tab.id == 'current_tab') {
-                tab.savedData = document.getElementById('textarea').innerHTML;
+                tab.savedData = textAreaInnerHTML;
                 tab.savedFont = document.getElementById('textarea').style.fontFamily;
             }
             if(tab.savedData.length > 0) {//Only save if it has been changed
@@ -158,6 +152,7 @@ function toggleHidden(element) {
     setHidden(element, !getHidden(element));
 }
 function setFontSize(size) {
+    localStorage.setItem('fontSize', size);
     document.getElementById('textarea').style.setProperty("--font-size", String(size)+"px");
 }
 function getFontSize() {
@@ -177,6 +172,7 @@ function getWebsiteFont() {
     return document.documentElement.style.fontFamily;
 }
 function setWebsiteFont(font) {
+    localStorage.setItem('siteFont', font);
     document.getElementById('fontSelect').value = font;
     document.documentElement.style.fontFamily = font;
 }
@@ -184,6 +180,7 @@ function getDarkMode() {
     return document.documentElement.style.colorScheme == 'dark';
 }
 function setDarkMode(bool) {
+    localStorage.setItem('darkMode', bool);
     document.documentElement.style.colorScheme = bool?'dark':'light';
 }
 function toggleDarkMode() {
@@ -193,10 +190,14 @@ function getInputStyle(property) {//TODO: Refactor cursor style system
     return document.documentElement.style.getPropertyValue("--"+property);
 }
 function setInputStyle(property, value) {
-    document.documentElement.style.setProperty("--"+property, value);
-    for(let e of document.getElementsByClassName('selected')) {
-        e.style.setProperty(property, value);
+    function setStyle(elements, property, value) {
+        for(let e of elements) {
+            e.style.setProperty(property, value);
+            setStyle(e.children, property, value);
+        }
     }
+    document.documentElement.style.setProperty("--"+property, value);
+    setStyle(document.getElementsByClassName('selected'), property, value);
 }
 function toggleInputStyle(property, onValue, offValue) {
     if(document.documentElement.style.getPropertyValue("--"+property) == onValue) {
@@ -225,30 +226,140 @@ function setInputHighlight(color) {
         e.style.backgroundColor = color;
     }
 }
-function copySelection() {
-    if(document.getElementsByClassName('selected').length > 0) {
-        navigator.clipboard.writeText(Array.from(document.getElementsByClassName('selected')).reduce((t, e) => {
-            let c = e.cloneNode(true);
-            c.classList.remove('selected');
-            return t + c.outerHTML;
-        }, ''));
+function storeSelection() {
+    let selection = Array.from(document.getElementsByClassName('selected'));//Copy selection and cursors before they get removed
+    let cursorBefore = Array.from(document.getElementsByClassName('cursor_before'));
+    let cursorAfter = Array.from(document.getElementsByClassName('cursor_after'));
+    let cursorInside =  Array.from(document.getElementsByClassName('cursor_inside'));
+    return {
+        selection: selection,
+        cursorBefore: cursorBefore,
+        cursorAfter: cursorAfter,
+        cursorInside: cursorInside
+    };
+}
+function unpackStoredSelection(storedSelection) {
+    storedSelection.selection.forEach(e => e.classList.add('selected'));//Re-add selection and cursors.
+    storedSelection.cursorBefore.forEach(e => e.classList.add('cursor_before'));
+    storedSelection.cursorAfter.forEach(e => e.classList.add('cursor_after'));
+    storedSelection.cursorInside.forEach(e => e.classList.add('cursor_inside'));
+}
+async function copySelection() {
+    function getClone (node) {
+        let tag = (node.tagName == 'NIMI') ? 'i' : (node.tagName == 'CARTOUCHE') ? 'b' : node.tagName;
+        const clone = document.createElement(tag);
+        for (const attr of node.attributes) {
+            if(attr.name != 'class') {
+                clone.setAttributeNS(null, attr.name, attr.value);
+            }
+        }
+        for(let child of node.childNodes) {
+            if(child instanceof Element) {
+                clone.appendChild(getClone(child));
+            } else {
+                clone.appendChild(child.cloneNode());
+            }
+        }
+        return clone;
     }
+    function innerText(element) {
+        let text = '';
+        for(let child of element.children) {
+            text += innerText(child);
+        }
+        if(element.tagName == 'CARTOUCHE') {
+            text = '󱦐' + text + '󱦑';
+        } else {
+            text += element.innerText;
+        }
+        return text;
+    }
+    let s = storeSelection();
+    if(document.getElementsByClassName('selected').length > 0) {
+        let selection = Array.from(document.getElementsByClassName('selected'));
+        let html = selection.reduce((t, e) => {
+            return t + getClone(e, 'i').outerHTML;
+        }, '');
+        console.log(html)
+        const clipboardItem = new ClipboardItem({
+            "text/plain": new Blob([selection.reduce((t, e) => t + innerText(e), '')], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" })
+        });
+        await navigator.clipboard.write([clipboardItem]);
+    } else {
+        const clipboardItem = new ClipboardItem({
+            "text/plain": new Blob([document.getElementById('textarea').innerText], { type: "text/plain" }),
+            "text/html": new Blob([getClone(document.getElementById('textarea')).innerHTML], { type: "text/html" })
+        });
+        await navigator.clipboard.write([clipboardItem]);
+    }
+    unpackStoredSelection(s);
 }
 function cutSelection() {
     copySelection();
-    let selection = Array.from(document.getElementsByClassName('selected'));
-    if(selection.length > 0) {
-        //moveCursorAfter(selection[0]);
-        for(let i = 0; i < selection.length; i ++) {
-            selection[i].remove();
+    if(document.getElementsByClassName('selected').length > 0) {
+        let selection = Array.from(document.getElementsByClassName('selected'));
+        if(selection[0].previousElementSibling != undefined) {
+            selection[0].previousElementSibling.classList.add('cursor_after');
+        } else if (selection[selection.length - 1].nextElementSibling != undefined) {
+            selection[selection.length - 1].nextElementSibling.classList.add('cursor_before');
+        } else if (selection[0].parentElement.tagName == 'CARTOUCHE') {
+            selection[0].parentElement.classList.add('cursor_inside');
         }
+        eraseSelection();
+    } else {
+        let element = document.getElementById('textarea')
+        element.innerHTML = '';
+        let span = createWordSpan(' ');
+        span.classList.add('cursor_before');
+        element.appendChild(span);
     }
 }
 async function pasteFromClipboard() {
-    let text = await navigator.clipboard.readText();
-    let div = document.createElement('div');
-    div.innerHTML = text;
-    putElements(Array.from(div.children));
+    function getInverseClone (node) {
+        let tag = (node.tagName == 'I') ? 'nimi' : (node.tagName == 'B') ? 'cartouche' : node.tagName;
+        const clone = document.createElement(tag);
+        for (const attr of node.attributes) {
+            if(attr.name != 'class') {
+                clone.setAttributeNS(null, attr.name, attr.value);
+            }
+        }
+        for(let child of node.childNodes) {
+            if(child instanceof Element) {
+                clone.appendChild(getInverseClone(child));
+            } else {
+                clone.appendChild(child.cloneNode());
+            }
+        }
+        return clone;
+    }
+    let items = await navigator.clipboard.read();
+    if(items[0].types.includes('text/html')) {
+        let text = await (await items[0].getType('text/html')).text();
+        let tempDiv = document.createElement('div');
+        tempDiv.innerHTML = text;
+        putElements(Array.from(tempDiv.children).map(c => getInverseClone(c)));
+    } else if (items[0].types.includes('text/plain')) {
+        let text = await (await items[0].getType('text/plain')).text();
+        let word = '';
+        for(let char of text) {
+            console.log(char)
+            console.log(/^[a-zA-Z]*$/.test(char))
+            if(/^[a-zA-Z]*$/.test(char)) {
+                word += char;
+            } else {
+                if(word.length > 0) {
+                    type(word);
+                    word = '';
+                }
+                type(char);
+            }
+        }
+        if(word.length > 0) {
+            type(word);
+            word = '';
+        }
+    }
 }
 
 document.addEventListener('wordTyped', (event) => {

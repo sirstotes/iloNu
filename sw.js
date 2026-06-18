@@ -1,6 +1,6 @@
 var GHPATH = '/iloNu';
 var APP_PREFIX = 'ilonu_';
-var VERSION = 'version_002';
+var VERSION = 'version_003';
 var URLS = [    
   `${GHPATH}/`,
   `${GHPATH}/notes/notes.html`,

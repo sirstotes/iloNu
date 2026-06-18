@@ -1,5 +1,5 @@
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, width=device-width"/>
     <link rel="stylesheet" href="../fonts/fonts.css">
     <link rel="stylesheet" href="../keyboard/keyboard.css">
     <link rel="stylesheet" href="style.css">
@@ -46,7 +46,7 @@
             <option style="background-color: var(--walo);" value="var(--walo)">monsi walo</option>
         </select>
         <button onclick="toggleInputStyle('font-style', 'italic', '')">nasa</button>
-        <span>jelo</span>
+        <span>loje</span>
         <button onclick="copySelection()">tu</button>
         <button onclick="cutSelection()">jo</button>
         <button onclick="pasteFromClipboard()">pana</button>
@@ -74,39 +74,30 @@
 
             if(document.getElementById('save') != undefined) {
                 document.getElementById('save').addEventListener('click', (event) => {
-                    console.log('Saving')
+                    console.log('Saving');
                     saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
                     loadTabs(db.transaction('files', 'readonly').objectStore('files'), db);
                 });
             }
-            window.addEventListener("beforeunload", (event) => {
-                saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
-                localStorage.setItem('darkMode', getDarkMode());
-                localStorage.setItem('siteFont', getWebsiteFont());
-                localStorage.setItem('fontSize', getFontSize());
+            // window.addEventListener("beforeunload", (event) => {//This doesn't run on PWA, don't rely on it.
+            //     saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+            //     localStorage.setItem('darkMode', getDarkMode());
+            //     localStorage.setItem('siteFont', getWebsiteFont());
+            //     localStorage.setItem('fontSize', getFontSize());
+            //     localStorage.setItem('toolbarHidden', getHidden(document.getElementById('toolbar')));
+            //     localStorage.setItem('keyboardHidden', getHidden(document.getElementById('keyboard_container')));
+            // });
+            window.setInterval(() => {
+                if (Array.from(document.getElementsByClassName('tab_name')).some(e => e.style.fontStyle == 'italic')) {//Not the best way to mark this lol
+                    let s = storeSelection();
+                    saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
+                    unpackStoredSelection(s);
+                }
                 localStorage.setItem('toolbarHidden', getHidden(document.getElementById('toolbar')));
                 localStorage.setItem('keyboardHidden', getHidden(document.getElementById('keyboard_container')));
-            });
-            window.setInterval(() => {
-                if (Array.from(document.getElementsByClassName('tab_name')).some(e => e.style.fontStyle == 'italic')) {
-                    // let cursorParent = getCursor().parentElement;
-                    // let cursorIndex;
-                    // if(cursorParent) {
-                    //     cursorIndex = Array.from(cursorParent.childNodes).indexOf(getCursor());
-                    // }
-                    let selection = Array.from(document.getElementsByClassName('selected'));
-                    let selection2 = Array.from(document.getElementsByClassName('single_selection'));
-
-                    saveTabs(db.transaction('files', 'readwrite').objectStore('files'));
-                    // if(cursorParent) {
-                    //     moveCursorInto(cursorParent, cursorIndex);
-                    // }
-                    selection.forEach(e => e.classList.add('selected'));
-                    selection2.forEach(e => e.classList.add('single_selection'));
-                }
-            }, 10000);//Autosave every 60 seconds
+            }, 10000);//Autosave every 10 seconds
         };
-        if (navigator.storage && navigator.storage.persist) {
+        if (navigator.storage && navigator.storage.persist) {//Mark storage mode to persistant (so clearing tabs won't clear notes)
             navigator.storage.persist();
         }
 

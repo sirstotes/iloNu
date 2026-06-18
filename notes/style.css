@@ -102,6 +102,7 @@ button {
         padding-block: 6px;
         padding-inline: 6px;
         margin-inline-end: 5px;
+        color: var(--background-color);
     }
 }
 /* .dropdown-container {
@@ -302,7 +303,7 @@ cursor::after {
     50%  { visibility: hidden; }
     100% { visibility: hidden; }
 }
-nimi, .nimi {
+nimi, .nimi, cartouche {
     display: inline-block;
     -webkit-user-select: none;
     -ms-user-select: none;
@@ -313,7 +314,22 @@ nimi, .nimi {
     min-height:2ex;
     white-space:pre;
 }
-.selected:not(.single_selection) {
+cartouche {
+    &::before {
+        content:'󱦐';
+        min-height:2ex;
+        vertical-align: middle;
+    }
+    &::after {
+        content:'󱦑';
+        min-height:2ex;
+        vertical-align: middle;
+    }
+    >nimi::after {
+        content:'󱦒';
+    }
+}
+.selected {
     background-color: var(--loje) !important;
 }
 @keyframes blink_left {
@@ -328,22 +344,25 @@ nimi, .nimi {
     50%  { box-shadow: none; }
     100% { box-shadow: none; }
 }
-.single_selection {
-    animation: blink_selection 1s linear infinite;
+@keyframes blink_bottom {
+    0%   { box-shadow: inset 0 -3px var(--border-color); }
+    49%  { box-shadow: inset 0 -3px var(--border-color); }
+    50%  { box-shadow: none; }
+    100% { box-shadow: none; }
+}
+.cursor_before {
     --border-color: var(--input-text-color);
-    &.border_left {
-        box-shadow: inset 3px 0 var(--border-color);
-        animation: blink_left 1s linear infinite;
-    }
-    &.border_right {
-        box-shadow: inset -3px 0 var(--border-color);
-        animation: blink_right 1s linear infinite;
-    }
-    /* &:not(.border_left) {
-        &:not(.border_right) {
-            background-color: var(--yellow-accent-color) !important;
-            animation: blink 1s linear infinite;
-        }
-    } */
+    box-shadow: inset 3px 0 var(--border-color);
+    animation: blink_left 1s linear infinite;
+}
+.cursor_after {
+    --border-color: var(--input-text-color);
+    box-shadow: inset -3px 0 var(--border-color);
+    animation: blink_right 1s linear infinite;
+}
+.cursor_inside {
+    --border-color: var(--input-text-color);
+    box-shadow: inset 0 -3px var(--border-color);
+    animation: blink_bottom 1s linear infinite;
 }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
