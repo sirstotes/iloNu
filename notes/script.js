@@ -153,10 +153,11 @@ function toggleHidden(element) {
 }
 function setFontSize(size) {
     localStorage.setItem('fontSize', size);
-    document.getElementById('textarea').style.setProperty("--font-size", String(size)+"px");
+    updateCursorPosition();
+    document.documentElement.style.setProperty("--font-size", String(size)+"px");
 }
 function getFontSize() {
-    return parseInt(document.getElementById('textarea').style.getPropertyValue('--font-size'));
+    return parseInt(document.documentElement.style.getPropertyValue('--font-size'));
 }
 function increaseFontSize() {
     setFontSize(getFontSize() + 1);
@@ -167,6 +168,7 @@ function decreaseFontSize() {
 function setDocumentFont(font) {
     document.getElementById('current_tab').savedFont = font;
     document.getElementById('textarea').style.fontFamily = font;
+    updateCursorPosition();
 }
 function getWebsiteFont() {
     return document.documentElement.style.fontFamily;
@@ -175,6 +177,7 @@ function setWebsiteFont(font) {
     localStorage.setItem('siteFont', font);
     document.getElementById('fontSelect').value = font;
     document.documentElement.style.fontFamily = font;
+    updateCursorPosition();
 }
 function getDarkMode() {
     return document.documentElement.style.colorScheme == 'dark';
@@ -211,7 +214,7 @@ function getInputColor() {
 }
 function setInputColor(color) {
     document.documentElement.style.setProperty("--input-text-color", color);
-    //document.getElementById('input-color-preview').style.color = color;
+    document.getElementById('input_color_preview').style.color = color;
     for(let e of document.getElementsByClassName('selected')) {
         e.style.color = color;
     }
@@ -221,28 +224,24 @@ function getInputHighlight() {
 }
 function setInputHighlight(color) {
     document.documentElement.style.setProperty("--input-highlight-color", color);
-    //document.getElementById('input-highlight-preview').style.backgroundColor = color;
+    document.getElementById('input_highlight_preview').style.backgroundColor = color;
     for(let e of document.getElementsByClassName('selected')) {
         e.style.backgroundColor = color;
     }
 }
 function storeSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));//Copy selection and cursors before they get removed
-    let cursorBefore = Array.from(document.getElementsByClassName('cursor_before'));
-    let cursorAfter = Array.from(document.getElementsByClassName('cursor_after'));
-    let cursorInside =  Array.from(document.getElementsByClassName('cursor_inside'));
+    let cursorParent = getCursor().parentElement;
+    let cursorIndex = Array.from(cursorParent.children).indexOf(getCursor());
     return {
         selection: selection,
-        cursorBefore: cursorBefore,
-        cursorAfter: cursorAfter,
-        cursorInside: cursorInside
+        cursorParent: cursorParent,
+        cursorIndex: cursorIndex
     };
 }
 function unpackStoredSelection(storedSelection) {
     storedSelection.selection.forEach(e => e.classList.add('selected'));//Re-add selection and cursors.
-    storedSelection.cursorBefore.forEach(e => e.classList.add('cursor_before'));
-    storedSelection.cursorAfter.forEach(e => e.classList.add('cursor_after'));
-    storedSelection.cursorInside.forEach(e => e.classList.add('cursor_inside'));
+    storedSelection.cursorParent.insertBefore(getCursor(), storedSelection.cursorParent.children[storedSelection.cursorIndex]);
 }
 async function copySelection() {
     function getClone (node) {

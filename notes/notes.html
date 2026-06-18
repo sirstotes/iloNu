@@ -10,6 +10,7 @@
     <link rel="canonical" href="https://sirstotes.github.io/iloNu/">
     <link rel="manifest" href="../manifest.json">
 </head>
+<span id="cursor_display"></span>
 <body>
     <header>
         <button id="settings" onclick="toggleHidden(document.getElementById('toolbar'))">ilo</button>
@@ -17,19 +18,12 @@
         <!-- <button id="save"><span>sin</span></button> -->
     </header>
     <div id="toolbar" class="toolbar scrollbar-hide">
-        <span>ale</span>
-        <button onclick="toggleDarkMode()">suno</button>
-        <select id="fontSelect" onchange="setWebsiteFont(this.value)"><!--TODO swap these select tags for a built-in version (custom styling pls TwT)-->
-            <option style="font-family: 'Linjamanka';" value="Linjamanka">linja lipamanka</option>
-            <option style="font-family: 'Fairfax';" value="Fairfax">Fairfax</option> <!--TODO: make fairfax remove border radiuses-->
-            <option style="font-family: 'Fairfax HD';" value="Fairfax HD">FairfaxHD</option>
-            <option style="font-family: 'nasin nanpa';" value="nasin nanpa">nasin nanpa</option>
-        </select>
-        <button onclick="toggleHidden(document.getElementById('keyboard_container'))">nena</button>
-        <span>lipu</span>
-        <button onclick="decreaseFontSize()">lili</button>
-        <button onclick="increaseFontSize()">suli</button>
-        <select onchange="setInputColor(this.value)" onclick="setInputColor(this.value)">
+        <span>󱤫</span>
+        <button onclick="cutSelection()">lanpan</button>
+        <button onclick="copySelection()">tu</button>
+        <button onclick="pasteFromClipboard()">pana</button>
+        <span>󱥂</span>
+        <select id="input_color_preview" onchange="setInputColor(this.value)" onclick="setInputColor(this.value)">
             <option value="">kule linja</option>
             <option style="color: var(--loje);" value="var(--loje)">linja loje</option>
             <option style="color: var(--jelo);" value="var(--jelo)">linja jelo</option>
@@ -37,7 +31,7 @@
             <option style="color: var(--pimeja);" value="var(--pimeja)">linja pimeja</option>
             <option style="color: var(--walo);" value="var(--walo)">linja walo</option>
         </select>
-        <select onchange="setInputHighlight(this.value)" onclick="setInputHighlight(this.value)">
+        <select id="input_highlight_preview" onchange="setInputHighlight(this.value)" onclick="setInputHighlight(this.value)">
             <option value="">kule monsi</option>
             <option style="background-color: var(--loje);" value="var(--loje)">monsi loje</option>
             <option style="background-color: var(--jelo);" value="var(--jelo)">monsi jelo</option>
@@ -46,10 +40,18 @@
             <option style="background-color: var(--walo);" value="var(--walo)">monsi walo</option>
         </select>
         <button onclick="toggleInputStyle('font-style', 'italic', '')">nasa</button>
-        <span>loje</span>
-        <button onclick="copySelection()">tu</button>
-        <button onclick="cutSelection()">jo</button>
-        <button onclick="pasteFromClipboard()">pana</button>
+        <button onclick="toggleInputStyle('text-decoration-line', 'underline', '')">anpa</button>
+        <span>󱤄</span>
+        <button onclick="decreaseFontSize()">lili</button>
+        <button onclick="increaseFontSize()">suli</button>
+        <select id="fontSelect" onchange="setWebsiteFont(this.value)"><!--TODO swap these select tags for a built-in version (custom styling pls TwT)-->
+            <option style="font-family: 'Linjamanka';" value="Linjamanka">linja lipamanka</option>
+            <option style="font-family: 'Fairfax';" value="Fairfax">Fairfax</option> <!--TODO: make fairfax remove border radiuses-->
+            <option style="font-family: 'Fairfax HD';" value="Fairfax HD">FairfaxHD</option>
+            <option style="font-family: 'nasin nanpa';" value="nasin nanpa">nasin nanpa</option>
+        </select>
+        <button onclick="toggleDarkMode()">suno</button>
+        <button onclick="toggleHidden(document.getElementById('keyboard_container'))">nena</button>
     </div>
     <main id="textarea" class="textarea scrollbar-hide"></main>
     <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>

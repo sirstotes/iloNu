@@ -1,11 +1,22 @@
+function getCursor() {
+    cursor = document.getElementById('cursor');
+    if(document.getElementById('cursor') == undefined) {
+        cursor = document.createElement('cursor');
+        cursor.id = 'cursor';
+    }
+    return cursor;
+}
+function updateCursorPosition() {
+    let rect = getCursor().getBoundingClientRect();
+    document.getElementById('cursor_display').style.left = rect.left;
+    document.getElementById('cursor_display').style.top = rect.top + rect.height*0.25;
+}
 function clearSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));
     selection.forEach(e => e.classList.remove('selected'));
 }
 function clearCursors() {
-    Array.from(document.getElementsByClassName('cursor_before')).forEach(e => e.classList.remove('cursor_before'));
-    Array.from(document.getElementsByClassName('cursor_after')).forEach(e => e.classList.remove('cursor_after'));
-    Array.from(document.getElementsByClassName('cursor_inside')).forEach(e => e.classList.remove('cursor_inside'));
+    getCursor().remove();
 }
 function eraseSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));
@@ -16,6 +27,20 @@ function createWordSpan(content) {
     span.innerHTML = content;
     return span;
 }
+let CURSOR = {BEFORE: 0, AFTER: 1, INSIDE: 2};
+function curseElement(element, cursorPos) {//Puts the cursor on an element.
+    if(element == undefined) {
+        return false;
+    }
+    let cursor = getCursor();
+    switch(cursorPos) {
+        case CURSOR.BEFORE: element.before(cursor); break;
+        case CURSOR.AFTER: element.after(cursor); break;
+        case CURSOR.INSIDE: element.appendChild(cursor); break;
+    }
+    updateCursorPosition();
+    return true;
+}
 function putElements(elements) {
     let lastElement;
     let selection = document.getElementsByClassName('selected');
@@ -25,25 +50,14 @@ function putElements(elements) {
         eraseSelection();
         lastElement = elements[elements.length - 1];
     } else {
-        Array.from(document.getElementsByClassName('cursor_before')).forEach(cursor => {
+        Array.from(document.getElementsByTagName('cursor')).forEach(cursor => {
             lastElement = elements[elements.length - 1];
             elements.forEach(newElement => cursor.before(newElement));
         });
-        Array.from(document.getElementsByClassName('cursor_after')).forEach(cursor => {
-            lastElement = elements[elements.length - 1];
-            for(let i = elements.length - 1; i > -1; i --) {
-                cursor.after(elements[i]);
-            }
-        });
-        Array.from(document.getElementsByClassName('cursor_inside')).forEach(cursor => {
-            lastElement = elements[elements.length - 1];
-            elements.forEach(newElement => cursor.appendChild(newElement));
-        });
     }
     clearCursors();
-    if(lastElement != undefined) {
-        lastElement.classList.add('cursor_after');
-    }
+    curseElement(lastElement, CURSOR.AFTER);
+    updateCursorPosition();
     const customEvent = new CustomEvent('wordsChanged', {bubbles: true, cancelable: true});
     document.dispatchEvent(customEvent);
 }
@@ -60,67 +74,36 @@ function type(word) {
 }
 function backspace() {
     let hasReplacedCursor = false;
+    function curseReplacement(elementStart, elementEnd) {
+        if(curseElement(elementStart.previousElementSibling, CURSOR.AFTER) || 
+        curseElement(elementEnd.nextElementSibling, CURSOR.BEFORE) || 
+        (elementStart.parentElement.tagName == 'CARTOUCHE' && curseElement(elementStart.parentElement, CURSOR.INSIDE))) {
+            hasReplacedCursor = true;
+        }
+    }
     let textArea;
     let selection = document.getElementsByClassName('selected');
     if(selection.length > 0) {
         textArea = selection[0].parentElement;
-        if(selection[0].previousElementSibling != undefined) {
-            hasReplacedCursor = true;
-            selection[0].previousElementSibling.classList.add('cursor_after');
-        } else if (selection[selection.length - 1].nextElementSibling != undefined) {
-            hasReplacedCursor = true;
-            selection[selection.length - 1].nextElementSibling.classList.add('cursor_before');
-        } else if (selection[0].parentElement.tagName == 'CARTOUCHE') {
-            hasReplacedCursor = true;
-            selection[0].parentElement.classList.add('cursor_inside');
-        }
+        curseReplacement(selection[0], selection[selection.length - 1]);
         eraseSelection();
     } else {
-        Array.from(document.getElementsByClassName('cursor_after')).forEach(cursor => {
-            textArea = cursor.parentElement;
-            if(cursor.previousElementSibling != undefined) {
-                hasReplacedCursor = true;
-                cursor.previousElementSibling.classList.add('cursor_after');
-            } else if (cursor.nextElementSibling != undefined) {
-                hasReplacedCursor = true;
-                cursor.nextElementSibling.classList.add('cursor_before');
-            } else if (cursor.parentElement.tagName == 'CARTOUCHE') {
-                hasReplacedCursor = true;
-                cursor.parentElement.classList.add('cursor_inside');
-            }
-            cursor.remove();
-        });
-        Array.from(document.getElementsByClassName('cursor_before')).forEach(cursor => {
+        Array.from(document.getElementsByTagName('cursor')).forEach(cursor => {
             textArea = cursor.parentElement;
             hasReplacedCursor = true;
             if(cursor.previousElementSibling != undefined) {
                 cursor.previousElementSibling.remove();
             }
         });
-        Array.from(document.getElementsByClassName('cursor_inside')).forEach(cursor => {
-            textArea = cursor.parentElement;
-            if(cursor.previousElementSibling != undefined) {
-                hasReplacedCursor = true;
-                cursor.previousElementSibling.classList.add('cursor_after');
-            } else if (cursor.nextElementSibling != undefined) {
-                hasReplacedCursor = true;
-                cursor.nextElementSibling.classList.add('cursor_before');
-            } else if (cursor.parentElement.tagName == 'CARTOUCHE') {
-                hasReplacedCursor = true;
-                cursor.parentElement.classList.add('cursor_inside');
-            }
-            cursor.remove();
-        });
     }
     if(!hasReplacedCursor && textArea != undefined) {
         if(textArea.children.length == 0) {
-            let newSpan = createWordSpan(' ');
-            newSpan.classList.add('cursor_before');
-            textArea.appendChild(newSpan);
+            curseElement(textArea, CURSOR.INSIDE);
         } else {
-            textArea.children[textArea.children.length-1].classList.add('cursor_after');
+            curseElement(textArea.children[textArea.children.length-1], CURSOR.AFTER);
         }
     }
+    updateCursorPosition();
     const customEvent = new CustomEvent('wordsChanged', {bubbles: true, cancelable: true});
     document.dispatchEvent(customEvent);
 }
@@ -162,7 +145,7 @@ function createCartoucheButton() {
         let cartouche = document.createElement('cartouche');
         putElements([cartouche]);
         clearCursors();
-        cartouche.classList.add('cursor_inside');
+        curseElement(cartouche, CURSOR.INSIDE);
     };
     button.onclick = startCartouche;
     return button;
@@ -233,19 +216,29 @@ function setKeyboard(keyboard, rows) {
 function setupTextarea(element, checkValidFunction) {
     element.addEventListener('pointerdown', function(event) {
         if(checkValidFunction()) {
-            let hasCursorBefore = event.target.classList.contains('cursor_before');
-            let hasCursorAfter = event.target.classList.contains('cursor_after');
+            let hasCursorBefore = event.target.previousElementSibling != null && event.target.previousElementSibling.tagName == 'CURSOR';
+            let hasCursorAfter = event.target.nextElementSibling != null && event.target.nextElementSibling.tagName == 'CURSOR';
             clearSelection();
             clearCursors();
             let target;
             if(event.target == element) {
                 if(element.children.length == 0) {
-                    target = createWordSpan(' ');
-                    target.classList.add('cursor_before');
-                    element.appendChild(target);
-                } else {
-                    target = element.children[element.children.length - 1];
-                    target.classList.add('cursor_after');
+                    curseElement(element, CURSOR.INSIDE);
+                } else {//Find the closest 
+                    let closest = element.children[element.children.length - 1];
+                    let closestRect;
+                    let before = false;
+                    for(let child of element.children) {
+                        let rect = child.getBoundingClientRect();
+                        if(event.clientY >= rect.top && event.clientY <= rect.bottom) {
+                            if(closestRect == undefined || Math.abs(rect.left - event.clientX) < Math.abs(closestRect.left - event.clientX)) {
+                                closest = child;
+                                closestRect = rect;
+                                before = event.clientX < rect.left || child.tagName == 'BR';
+                            }
+                        }
+                    }
+                    curseElement(closest, before ? CURSOR.BEFORE : CURSOR.AFTER);
                 }
             } else {
                 target = event.target;
@@ -253,29 +246,30 @@ function setupTextarea(element, checkValidFunction) {
                 if (event.offsetX > center) {
                     if(hasCursorAfter) {
                         if(event.target.tagName == 'CARTOUCHE' && event.target.children.length == 0) {
-                            target.classList.add('cursor_inside');
+                            curseElement(target, CURSOR.INSIDE);
                         } else {
                             target.classList.add('selected');
                         }
                     } else {
-                        target.classList.add('cursor_after');
+                        curseElement(target, CURSOR.AFTER);
                     }
                 } else {
                     if(hasCursorBefore) {
                         if(event.target.tagName == 'CARTOUCHE' && event.target.children.length == 0) {
-                            target.classList.add('cursor_inside');
+                            curseElement(target, CURSOR.INSIDE);
                         } else {
                             target.classList.add('selected');
                         }
                     } else {
-                        target.classList.add('cursor_before');
+                        curseElement(target, CURSOR.BEFORE);
                     }
                 }
             }
             element.selectStart = target;
-            element.dragStartY = event.clientY;
             element.canDrag = true;
         }
+        element.dragStartY = event.clientY;
+        element.scrollStartY = element.scrollTop;
     });
     element.addEventListener('pointerup', function(event) {
         element.canDrag = false;
@@ -289,13 +283,15 @@ function setupTextarea(element, checkValidFunction) {
                 parentElement.children[i].classList.add('selected');
             }
         }
-        if(checkValidFunction()) {
+        if(element.selectStart == undefined) {
+            element.scrollTop = element.scrollStartY + element.dragStartY - event.clientY;
+        } else if(checkValidFunction()) {
             if(element.canDrag) {
                 let target = event.target;
                 if(target == element.selectStart) {//Update the target if you drag off of it
                     target = document.elementFromPoint(event.clientX, event.clientY);
                 }
-                if(target.parentElement.tagName == 'CARTOUCHE' && element.selectStart.parentElement.tagName != 'CARTOUCHE') {
+                if(target.parentElement != undefined && target.parentElement.tagName == 'CARTOUCHE' && element.selectStart.parentElement.tagName != 'CARTOUCHE') {
                     target = target.parentElement;
                 }
                 if(event.target == element) {
@@ -316,8 +312,11 @@ function setupTextarea(element, checkValidFunction) {
             }
         }
     });
+    element.addEventListener('scroll', function(event) {
+        updateCursorPosition();
+    });
 }
-let UCSURRows = [keyboardRow('󱤡', '󱤊', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '󱥙', createFunctionButton('󱥄​󱥶', backspace)),//TODO: Press and hold for alt glyphs
+let UCSURRows = [keyboardRow('󱤡', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '󱤇', '󱥙', createFunctionButton('󱥄​󱥶', backspace)),//TODO: Press and hold for alt glyphs
             keyboardRow('󱤴', '󱥞', '󱥆', '󱥁', '󱤬', '󱥩', '󱥧', '󱤙', '󱥖'),
             multiRow([keyboardRow(createFunctionButton('A', multiRowGoTo(2, 1)), createFunctionButton('E', multiRowGoTo(3, 1)), createFunctionButton('I', multiRowGoTo(4, 1)), createFunctionButton('J', multiRowGoTo(5, 1)), createFunctionButton('K', multiRowGoTo(6)), createFunctionButton('L', multiRowGoTo(8)), createFunctionButton('M', multiRowGoTo(10))),
                     keyboardRow(createFunctionButton('N', multiRowGoTo(12, 1)), createFunctionButton('O', multiRowGoTo(13, 1)), createFunctionButton('P', multiRowGoTo(14)), createFunctionButton('S', multiRowGoTo(16)), createFunctionButton('T', multiRowGoTo(18, 1)), createFunctionButton('U', multiRowGoTo(19, 1)), createFunctionButton('W', multiRowGoTo(20, 1))),
@@ -342,4 +341,4 @@ let UCSURRows = [keyboardRow('󱤡', '󱤊', '󱤧', '󱥄', '󱤉', '󱥍', '�
                     keyboardRow('󱥲', '󱥳', '󱥴', '󱥵', '󱥶', '󱥷'),//W
                     keyboardRow('{', '}', '(', ')', '[', ']'),
                     keyboardRow('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')], 2, false, true),
-            keyboardRow(createCartoucheButton(), createFunctionButton('󱤆', getMultirowAndGoTo(0, 21, 2)), 'te', 'to', ' ', '󱤀', ':', '.', createFunctionButton('linja sin', newLine))];
+            keyboardRow(createCartoucheButton(), createFunctionButton('󱤆', getMultirowAndGoTo(0, 21, 2)), 'te', 'to', ' ', ':', '.', createFunctionButton('linja sin', newLine))];
