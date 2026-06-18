@@ -17,6 +17,7 @@ function clearSelection() {
 }
 function clearCursors() {
     getCursor().remove();
+    document.getElementById('cursor_display').style.left = -10;
 }
 function eraseSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));
@@ -127,6 +128,7 @@ function createKeyButton(nimi) {
     button.onclick = (event) => {
         type(nimi);
         afterClick(button);
+        event.stopPropagation();
     };
     return button;
 }
@@ -149,6 +151,45 @@ function createCartoucheButton() {
     };
     button.onclick = startCartouche;
     return button;
+}
+function createLongPressButton(defaultButton, hiddenButtons) {
+    if(typeof defaultButton === 'string' || defaultButton instanceof String) {
+        defaultButton = createKeyButton(defaultButton);
+    }
+    let div = document.createElement('div');
+    div.classList.add('popup');
+    for(let button of hiddenButtons) {
+        if(typeof button === 'string' || button instanceof String) {
+            button = createKeyButton(button);
+        }
+        div.append(button);
+        let og = button.onclick;
+        button.onclick = (event) => {
+            og(event);
+            div.remove();
+        };
+    }
+    defaultButton.addEventListener('pointerdown', event => {
+        defaultButton.pressTimer = setTimeout(() => {
+            defaultButton.append(div);
+            let br1 = defaultButton.getBoundingClientRect();
+            let br2 = div.getBoundingClientRect();
+            div.style.left = br1.left - br2.width/2 + br1.width/2;
+            div.style.top = br1.top - br2.height - 5;
+            let removeDiv = function() {
+                div.remove();
+                document.removeEventListener('click', removeDiv);
+            }
+            document.addEventListener('click', removeDiv);
+        }, 800);
+    });
+    defaultButton.addEventListener('pointercancel', event => {
+        event.preventDefault();
+    });
+    document.addEventListener('pointerup', event => {
+        clearTimeout(defaultButton.pressTimer);
+    });
+    return defaultButton;
 }
 function keyboardRow() {
     let div = document.createElement('div');
@@ -316,8 +357,8 @@ function setupTextarea(element, checkValidFunction) {
         updateCursorPosition();
     });
 }
-let UCSURRows = [keyboardRow('󱤡', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '󱤇', '󱥙', createFunctionButton('󱥄​󱥶', backspace)),//TODO: Press and hold for alt glyphs
-            keyboardRow('󱤴', '󱥞', '󱥆', '󱥁', '󱤬', '󱥩', '󱥧', '󱤙', '󱥖'),
+let UCSURRows = [keyboardRow('󱤡', '󱤧', '󱥄', '󱤉', createLongPressButton('󱥍', ['󱦓']), '󱤂', '󱤇', '󱥙', createFunctionButton('󱥄​󱥶', backspace)),//TODO: Press and hold for alt glyphs
+            keyboardRow('󱤴', '󱥞', '󱥆', createLongPressButton('󱥁', ['󱦉', '󱦊', '󱦋']), '󱤬', '󱥩', '󱥧', '󱤙', '󱥖'),
             multiRow([keyboardRow(createFunctionButton('A', multiRowGoTo(2, 1)), createFunctionButton('E', multiRowGoTo(3, 1)), createFunctionButton('I', multiRowGoTo(4, 1)), createFunctionButton('J', multiRowGoTo(5, 1)), createFunctionButton('K', multiRowGoTo(6)), createFunctionButton('L', multiRowGoTo(8)), createFunctionButton('M', multiRowGoTo(10))),
                     keyboardRow(createFunctionButton('N', multiRowGoTo(12, 1)), createFunctionButton('O', multiRowGoTo(13, 1)), createFunctionButton('P', multiRowGoTo(14)), createFunctionButton('S', multiRowGoTo(16)), createFunctionButton('T', multiRowGoTo(18, 1)), createFunctionButton('U', multiRowGoTo(19, 1)), createFunctionButton('W', multiRowGoTo(20, 1))),
                     keyboardRow('󱤀', '󱤁', '󱤂', '󱤃', '󱤄', '󱤅', '󱤆', '󱤇', '󱤈'),//A
@@ -330,11 +371,11 @@ let UCSURRows = [keyboardRow('󱤡', '󱤧', '󱥄', '󱤉', '󱥍', '󱤂', '�
                     keyboardRow('󱤨', '󱤩', '󱤪', '󱤫', '󱤬', '󱤭', '󱤮', '󱤯'),//L
                     keyboardRow('󱤰', '󱤱', '󱤲', '󱤳', '󱦂', '󱤴', '󱤵', '󱦇'),//M
                     keyboardRow('󱤶', '󱤷', '󱤸', '󱥽', '󱤹', '󱤺', '󱤻', '󱤼'),//M
-                    keyboardRow('󱦆', '󱥸', '󱤽', '󱤾', '󱤿', '󱥀', '󱥁', '󱥂', '󱥃'),//N
+                    keyboardRow('󱦆', '󱥸', '󱤽', '󱤾', '󱤿', '󱥀', createLongPressButton('󱥁', ['󱦉', '󱦊', '󱦋']), '󱥂', '󱥃'),//N
                     keyboardRow('󱥄', '󱥅', '󱥆', '󱥇'),//O
-                    keyboardRow('󱥈', '󱥉', '󱥊', '󱥋', '󱥌', '󱥍', '󱥎'),//P
+                    keyboardRow('󱥈', '󱥉', '󱥊', '󱥋', '󱥌', createLongPressButton('󱥍', ['󱦓']), '󱥎'),//P
                     keyboardRow('󱥏', '󱥐', '󱥑', '󱥒', '󱥓', '󱥔'),//P
-                    keyboardRow('󱥖', '󱥗', '󱥘', '󱥙', '󱥚', '󱥛', '󱥜', '󱥝', '󱥞'),//S
+                    keyboardRow('󱥖', '󱥗', '󱥘', '󱥙', createLongPressButton('󱥚', ['󱦌']), '󱥛', '󱥜', '󱥝', '󱥞'),//S
                     keyboardRow('󱥟', '󱥠', '󱦁', '󱥡', '󱥢', '󱥣', '󱥤', '󱥥', '󱥦'),//S
                     keyboardRow('󱥧', '󱥨', '󱥩', '󱥪', '󱥫', '󱥬', '󱥭', '󱥾', '󱥮'),//T
                     keyboardRow('󱥯', '󱥰', '󱥱'),//U

@@ -18,11 +18,10 @@
         <!-- <button id="save"><span>sin</span></button> -->
     </header>
     <div id="toolbar" class="toolbar scrollbar-hide">
-        <span>󱤫</span>
+        <span>󱥂</span>
         <button onclick="cutSelection()">lanpan</button>
         <button onclick="copySelection()">tu</button>
         <button onclick="pasteFromClipboard()">pana</button>
-        <span>󱥂</span>
         <select id="input_color_preview" onchange="setInputColor(this.value)" onclick="setInputColor(this.value)">
             <option value="">kule linja</option>
             <option style="color: var(--loje);" value="var(--loje)">linja loje</option>
@@ -40,7 +39,9 @@
             <option style="background-color: var(--walo);" value="var(--walo)">monsi walo</option>
         </select>
         <button onclick="toggleInputStyle('font-style', 'italic', '')">nasa</button>
-        <button onclick="toggleInputStyle('text-decoration-line', 'underline', '')">anpa</button>
+        <button onclick="toggleSelectionClass('longpi')">anpa</button>
+        <button onclick="combineSelectionStacking()">lon</button>
+        <button onclick="combineSelectionScaling()">insa</button>
         <span>󱤄</span>
         <button onclick="decreaseFontSize()">lili</button>
         <button onclick="increaseFontSize()">suli</button>
@@ -56,6 +57,7 @@
     <main id="textarea" class="textarea scrollbar-hide"></main>
     <div id="keyboard_container"><div id="keyboard" class="keyboard"></div></div>
     <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
         setKeyboard(document.getElementById('keyboard'), UCSURRows);
         setupTextarea(document.getElementById('textarea'), () => document.getElementById('current_tab') != undefined);
         const request = indexedDB.open("MyDatabase", 1);//Open database

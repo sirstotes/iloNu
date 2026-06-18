@@ -193,20 +193,32 @@ function getInputStyle(property) {//TODO: Refactor cursor style system
     return document.documentElement.style.getPropertyValue("--"+property);
 }
 function setInputStyle(property, value) {
-    function setStyle(elements, property, value) {
+    function setStyle(elements) {
         for(let e of elements) {
             e.style.setProperty(property, value);
-            setStyle(e.children, property, value);
+            setStyle(e.children);
         }
     }
     document.documentElement.style.setProperty("--"+property, value);
-    setStyle(document.getElementsByClassName('selected'), property, value);
+    setStyle(document.getElementsByClassName('selected'));
 }
 function toggleInputStyle(property, onValue, offValue) {
     if(document.documentElement.style.getPropertyValue("--"+property) == onValue) {
         setInputStyle(property, offValue);
     } else {
         setInputStyle(property, onValue);
+    }
+}
+function toggleSelectionClass(className) {
+    if(document.getElementsByClassName('selected').length > 0) {
+        let remove = document.getElementsByClassName('selected')[0].classList.contains(className);//So it doesn't toggle them all seperately
+        for(let e of document.getElementsByClassName('selected')) {
+            if(remove) {
+                e.classList.remove(className);
+            } else {
+                e.classList.add(className);
+            }
+        }
     }
 }
 function getInputColor() {
@@ -229,10 +241,32 @@ function setInputHighlight(color) {
         e.style.backgroundColor = color;
     }
 }
+function combineSelectionStacking() {
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 1 && selection[0].tagName == "NIMI" && selection[1].tagName == "NIMI") {
+        selection[0].innerHTML += "󱦕" + selection[1].innerText;
+        selection[1].remove();
+        clearSelection();
+        selection[0].classList.add('selected');
+    }
+}
+function combineSelectionScaling() {
+    let selection = Array.from(document.getElementsByClassName('selected'));
+    if(selection.length > 1 && selection[0].tagName == "NIMI" && selection[1].tagName == "NIMI") {
+        selection[0].innerHTML += "󱦖" + selection[1].innerText;
+        selection[1].remove();
+        clearSelection();
+        selection[0].classList.add('selected');
+    }
+}
 function storeSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));//Copy selection and cursors before they get removed
-    let cursorParent = getCursor().parentElement;
-    let cursorIndex = Array.from(cursorParent.children).indexOf(getCursor());
+    let cursorParent = undefined;
+    let cursorIndex = undefined;
+    if(getCursor().parentElement != undefined) {
+        cursorParent = getCursor().parentElement;
+        cursorIndex = Array.from(cursorParent.children).indexOf(getCursor());
+    }
     return {
         selection: selection,
         cursorParent: cursorParent,
@@ -241,7 +275,9 @@ function storeSelection() {
 }
 function unpackStoredSelection(storedSelection) {
     storedSelection.selection.forEach(e => e.classList.add('selected'));//Re-add selection and cursors.
-    storedSelection.cursorParent.insertBefore(getCursor(), storedSelection.cursorParent.children[storedSelection.cursorIndex]);
+    if(storedSelection.cursorParent != undefined) {
+        storedSelection.cursorParent.insertBefore(getCursor(), storedSelection.cursorParent.children[storedSelection.cursorIndex]);
+    }
 }
 async function copySelection() {
     function getClone (node) {

@@ -253,6 +253,16 @@ option {
     flex-direction: column;
     z-index: 3;
 }
+.popup {
+    position: absolute;
+    background-color: var(--background-color);
+    padding: 5px;
+    border-radius: 10px;
+    > button {
+        min-width: 4ex;
+        min-height: 4ex;
+    }
+}
 .keyboard {
     flex-grow:1;
 }
@@ -302,6 +312,9 @@ nimi, cartouche {
     min-width: 2ex;
     min-height:2ex;
     white-space:pre-wrap;
+    &.longpi::after {
+        content: '󱦔';
+    }
 }
 cartouche {
     &::before {
