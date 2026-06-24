@@ -157,7 +157,7 @@ function createLongPressButton(defaultButton, hiddenButtons) {
         defaultButton = createKeyButton(defaultButton);
     }
     let div = document.createElement('div');
-    div.classList.add('popup');
+    div.classList.add('keyboard_popup');
     for(let button of hiddenButtons) {
         if(typeof button === 'string' || button instanceof String) {
             button = createKeyButton(button);

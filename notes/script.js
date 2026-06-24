@@ -1,10 +1,23 @@
-function switchTab(tab) {
-    if(tab.parentElement == undefined) {return}
+function getTabWithId(dbID) {
+    for(let tab of document.getElementsByClassName('tab')) {
+        if (tab.dbID == dbID) {
+            return tab;
+        }
+    }
+}
+function updateCurrentTabData () {
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
-        clearSelection();
         currentTab.savedData = document.getElementById('textarea').innerHTML;
         currentTab.savedFont = document.getElementById('textarea').style.fontFamily;
+    }
+}
+function switchTab(tab) {
+    if(tab.parentElement == undefined) {return}
+    updateCurrentTabData();
+    clearSelection();
+    let currentTab = document.getElementById('current_tab');
+    if(currentTab) {
         currentTab.id = '';
         currentTab.getElementsByClassName('tab_erase')[0].remove();
     }
@@ -35,13 +48,8 @@ function switchTab(tab) {
     weka.innerHTML = 'weka';
     weka.classList.add('tab_erase');
     weka.style.fontSize = '20px';
-    weka.readyToDelete = false;
     weka.addEventListener('click', function(event) {
-        if(weka.readyToDelete) {//Require two clicks to prevent accidental deletion
-            removeTab(tab);
-        } else {
-            weka.readyToDelete = true;
-        }
+        removeTab(tab);
     });
     tab.insertBefore(weka, tab.children[0]);
 }
@@ -67,28 +75,49 @@ function newTab() {
     document.getElementById('new').before(button);
     switchTab(button);
 }
-function loadTab(title, id, data, font, db) {
+function saveTab(tab, open) {
+    const store = document.iloNUdb.transaction('files', 'readwrite').objectStore('files');
+    if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
+        const request = store.get(tab.dbID);
+        request.onsuccess = (event) => {
+            const data = event.target.result;
+            data.title = tab.getElementsByClassName('tab_name')[0].innerHTML;
+            data.data = tab.savedData;
+            data.font = tab.savedFont;
+            data.open = open;
+            console.log('Saving tab:', data.title, data.data);
+            const requestUpdate = store.put(data, tab.dbID);
+        }
+    } else {//Otherwise create a new entry
+        if(tab.savedData.length > 0) {//Only save if it has been changed
+            console.log("Adding new data");
+            const addReq = store.add({title: tab.getElementsByClassName('tab_name')[0].innerHTML, data: tab.savedData, font: tab.savedFont, open: true});
+            addReq.onsuccess = (e) => {tab.dbID = e.target.result;}
+        }
+    }
+}
+function loadTab(title, id, data, font) {
     let button = tab(title);
     button.dbID = id;
-    button.db = db;
     button.savedData = data;
     button.savedFont = font;
     document.getElementById('new').before(button);
     return button;
 }
 function removeTab(tab) {
+    updateCurrentTabData();
+    if(tab.hasOwnProperty('dbID')) {
+        saveTab(tab, false);
+    }
     if(tab.id == 'current_tab') {
         document.getElementById('textarea').innerHTML = '';
     }
     if(tab.previousElementSibling.tagName == 'DIV') {
         switchTab(tab.previousElementSibling);
     } else if (tab.nextElementSibling.tagName == 'DIV') {
-        switchTab(tab.nextElementSibling)
+        switchTab(tab.nextElementSibling);
     }
     tab.remove();
-    if(tab.hasOwnProperty('dbID')) {
-        tab.db.transaction('files', 'readwrite').objectStore('files').delete(tab.dbID);
-    }
 }
 function loadTabs(store, db) {
     for(let tab of document.getElementsByClassName('tab')) {
@@ -98,7 +127,9 @@ function loadTabs(store, db) {
     store.openCursor().onsuccess = (event) => {
         const cursor = event.target.result;
         if (cursor) {
-            tab = loadTab(cursor.value.title, cursor.key, cursor.value.data, cursor.value.font, db);
+            if(cursor.value.open) {
+                tab = loadTab(cursor.value.title, cursor.key, cursor.value.data, cursor.value.font);
+            }
             cursor.continue();
         } else {
             if(tab == undefined) {
@@ -109,37 +140,14 @@ function loadTabs(store, db) {
         }
     };
 }
-function saveTabs(store) {
+function saveTabs() {
     console.log('Saving all files to database.');
     clearSelection();
     clearCursors();
-    let textAreaInnerHTML = document.getElementById('textarea').innerHTML;
+    updateCurrentTabData();
     for(let tab of document.getElementsByClassName('tab')) {
         tab.getElementsByClassName('tab_name')[0].style.fontStyle = '';
-        if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
-            const request = store.get(tab.dbID);
-            request.onsuccess = (event) => {
-                const data = event.target.result;
-                data.title = tab.getElementsByClassName('tab_name')[0].innerHTML;
-                if(tab.id == 'current_tab') {
-                    tab.savedData = textAreaInnerHTML;
-                    tab.savedFont = document.getElementById('textarea').style.fontFamily;
-                }
-                data.data = tab.savedData;
-                data.font = tab.savedFont;
-                const requestUpdate = store.put(data, tab.dbID);
-            }
-        } else {//Otherwise create a new entry
-            if(tab.id == 'current_tab') {
-                tab.savedData = textAreaInnerHTML;
-                tab.savedFont = document.getElementById('textarea').style.fontFamily;
-            }
-            if(tab.savedData.length > 0) {//Only save if it has been changed
-                console.log("Adding new data");
-                const addReq = store.add({title: tab.getElementsByClassName('tab_name')[0].innerHTML, data: tab.savedData, font: tab.savedFont});
-                addReq.onsuccess = (e) => {tab.dbID = e.target.result;}
-            }
-        }
+        saveTab(tab, true);
     }
 }
 function getHidden(element) {
@@ -395,6 +403,66 @@ async function pasteFromClipboard() {
             word = '';
         }
     }
+}
+function updateDocumentsTable() {
+    let docs = [];
+    const store = document.iloNUdb.transaction('files', 'readonly').objectStore('files');
+    store.openCursor().onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+            docs.push({title: cursor.value.title, id: cursor.key, open: cursor.value.open, data: cursor.value.data, font: cursor.value.font});
+            cursor.continue();
+        } else {
+            document.getElementById('all_notes_display').replaceWith(createDocumentsTable(docs));
+        }
+    };
+}
+function createDocumentsTable(documents) {
+    let table = document.createElement('table');
+    table.innerHTML = '<tbody><tr><th style="width:80%;">nimi</th><th style="width:20%;">ken</th></tr></tbody>';
+    table.id = 'all_notes_display';
+    let tableInner = table.getElementsByTagName('tbody')[0];
+    for(let doc of documents) {
+        let row = document.createElement('tr');
+            let title = document.createElement('td');
+            title.innerHTML = doc.title;
+            row.append(title);
+            let actions = document.createElement('td');
+                let open = document.createElement('button');
+                open.innerHTML = 'open';
+                open.addEventListener('click', (event) => {
+                    let tab = getTabWithId(doc.id);
+                    if(tab == undefined) {
+                        tab = loadTab(doc.title, doc.id, doc.data, doc.font);
+                        const store = document.iloNUdb.transaction('files', 'readwrite').objectStore('files');
+                        const request = store.get(doc.id);
+                        request.onsuccess = (event) => {
+                            const data = event.target.result;
+                            data.open = true;
+                            const requestUpdate = store.put(data, doc.id);
+                        }
+                    }
+                    switchTab(tab);
+                    setHidden(document.getElementById('settings_popup'), true);
+                });
+                actions.append(open);
+                let del = document.createElement('button');
+                del.innerHTML = 'weka';
+                del.readyToDelete = false;
+                del.addEventListener('click', (event) => {
+                    if(del.readyToDelete) {
+                        document.iloNUdb.transaction('files', 'readwrite').objectStore('files').delete(doc.id);
+                        row.remove();
+                    } else {
+                        del.readyToDelete = true;
+                        del.style.color = 'var(--red-accent-color)';
+                    }
+                });
+                actions.append(del);
+            row.append(actions);
+        tableInner.append(row);
+    }
+    return table;
 }
 
 document.addEventListener('wordTyped', (event) => {

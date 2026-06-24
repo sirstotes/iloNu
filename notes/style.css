@@ -3,17 +3,20 @@
     --background-color: #1a535c;
     --text-area-background-color: light-dark(#f7fff7, #172a2e);
     --text-area-shadow-color: light-dark(#edf3ed, #000000);
-    --text-color: light-dark(#010303, #f7fff7);
+    --text-color: light-dark(#010303, #e1e9e1);
     --button-color: light-dark(#4ecdc4, #349090);
     --button-hover-color: light-dark(#7cece5, #47a8a8);
     --button-shadow-color: light-dark(#41ada6, #297474);
     --button-text-color: var(--text-color);
-    --secondary-button-color: light-dark(#349090, #4ecdc4);
+    --secondary-button-color: light-dark(#349090, #47bdb5);
     --secondary-button-hover-color: light-dark(#47a8a8, #7cece5);
     --secondary-button-shadow-color: light-dark(#297474, #41ada6);
     --secondary-button-text-color: #f7fff7;
     --toolbar-button-color: light-dark(#ecf3ec, #324b4b);
     --toolbar-button-hover-color: light-dark(#f7fff7, #426161);
+    --popup-menu-color: light-dark(#ecf3ec, #324b4b);
+    --table-head-color: light-dark(#349090, #47bdb5);
+    --table-row-color: light-dark(#ffffff, #172a2e);
     --red-accent-color: #ff6b6b;
     --yellow-accent-color: #ffe66d;
     
@@ -253,7 +256,7 @@ option {
     flex-direction: column;
     z-index: 3;
 }
-.popup {
+.keyboard_popup {
     position: absolute;
     background-color: var(--background-color);
     padding: 5px;
