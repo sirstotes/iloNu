@@ -1,11 +1,12 @@
 var GHPATH = '/iloNu';
 var APP_PREFIX = 'ilonu_';
-var VERSION = 'version_004';
+var VERSION = 'version_005';
 var URLS = [    
   `${GHPATH}/`,
   `${GHPATH}/notes/notes.html`,
   `${GHPATH}/notes/script.js`,
   `${GHPATH}/notes/style.css`,
+  `${GHPATH}/notes/popups.css`,
   `${GHPATH}/fonts/FairfaxPona.ttf`,
   `${GHPATH}/fonts/FairfaxPonaHD.woff`,
   `${GHPATH}/fonts/fonts.css`,
