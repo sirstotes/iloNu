@@ -254,7 +254,7 @@ option {
     padding:10px 5px 20px 5px;
     display:flex;
     flex-direction: column;
-    z-index: 3;
+    z-index: 5;
 }
 .keyboard_popup {
     position: absolute;
@@ -337,23 +337,11 @@ cartouche {
 .selected {
     background-color: var(--loje) !important;
 }
-@keyframes blink {
-    0%   { display: block; }
-    49%  { display: block; }
-    50%  { display: none; }
-    100% { display: none; }
-}
-
-cursor {
-    display:inline;
-    width: 0;
-}
 #cursor_display {
-    position:absolute;
-    width: 3px;
-    height: calc(var(--font-size));
     background-color: var(--input-text-color);
-    animation: blink 1s linear infinite;
-    z-index: 2;
 }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.lasina {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+}

@@ -6,8 +6,10 @@ function getTabWithId(dbID) {
     }
 }
 function updateCurrentTabData () {
+    clearSelection();
+    clearCursors();
     let currentTab = document.getElementById('current_tab');
-    if(currentTab) {
+    if(currentTab != undefined) {
         currentTab.savedData = document.getElementById('textarea').innerHTML;
         currentTab.savedFont = document.getElementById('textarea').style.fontFamily;
     }
@@ -15,7 +17,6 @@ function updateCurrentTabData () {
 function switchTab(tab) {
     if(tab.parentElement == undefined) {return}
     updateCurrentTabData();
-    clearSelection();
     let currentTab = document.getElementById('current_tab');
     if(currentTab) {
         currentTab.id = '';
@@ -79,13 +80,17 @@ function saveTab(tab, open) {
     const store = document.iloNUdb.transaction('files', 'readwrite').objectStore('files');
     if(tab.hasOwnProperty('dbID')) {//Update the database entry if it has an associated ID
         const request = store.get(tab.dbID);
+        let save = {
+            title: tab.getElementsByClassName('tab_name')[0].innerHTML,
+            data: tab.savedData,
+            font: tab.savedFont
+        }
         request.onsuccess = (event) => {
             const data = event.target.result;
-            data.title = tab.getElementsByClassName('tab_name')[0].innerHTML;
-            data.data = tab.savedData;
-            data.font = tab.savedFont;
+            data.title = save.title;
+            data.data = save.data;
+            data.font = save.font;
             data.open = open;
-            console.log('Saving tab:', data.title, data.data);
             const requestUpdate = store.put(data, tab.dbID);
         }
     } else {//Otherwise create a new entry
@@ -142,8 +147,6 @@ function loadTabs(store, db) {
 }
 function saveTabs() {
     console.log('Saving all files to database.');
-    clearSelection();
-    clearCursors();
     updateCurrentTabData();
     for(let tab of document.getElementsByClassName('tab')) {
         tab.getElementsByClassName('tab_name')[0].style.fontStyle = '';
@@ -285,6 +288,7 @@ function unpackStoredSelection(storedSelection) {
     storedSelection.selection.forEach(e => e.classList.add('selected'));//Re-add selection and cursors.
     if(storedSelection.cursorParent != undefined) {
         storedSelection.cursorParent.insertBefore(getCursor(), storedSelection.cursorParent.children[storedSelection.cursorIndex]);
+        updateCursorPosition();
     }
 }
 async function copySelection() {
@@ -323,7 +327,6 @@ async function copySelection() {
         let html = selection.reduce((t, e) => {
             return t + getClone(e, 'i').outerHTML;
         }, '');
-        console.log(html)
         const clipboardItem = new ClipboardItem({
             "text/plain": new Blob([selection.reduce((t, e) => t + innerText(e), '')], { type: "text/plain" }),
             "text/html": new Blob([html], { type: "text/html" })
@@ -386,8 +389,6 @@ async function pasteFromClipboard() {
         let text = await (await items[0].getType('text/plain')).text();
         let word = '';
         for(let char of text) {
-            console.log(char)
-            console.log(/^[a-zA-Z]*$/.test(char))
             if(/^[a-zA-Z]*$/.test(char)) {
                 word += char;
             } else {
@@ -419,7 +420,7 @@ function updateDocumentsTable() {
 }
 function createDocumentsTable(documents) {
     let table = document.createElement('table');
-    table.innerHTML = '<tbody><tr><th style="width:80%;">nimi</th><th style="width:20%;">ken</th></tr></tbody>';
+    table.innerHTML = '<tbody><tr><th>nimi</th><th>ken</th></tr></tbody>';
     table.id = 'all_notes_display';
     let tableInner = table.getElementsByTagName('tbody')[0];
     for(let doc of documents) {
@@ -453,9 +454,14 @@ function createDocumentsTable(documents) {
                     if(del.readyToDelete) {
                         document.iloNUdb.transaction('files', 'readwrite').objectStore('files').delete(doc.id);
                         row.remove();
+                        let tab = getTabWithId(doc.id);
+                        if(tab != undefined) {
+                            tab.remove();
+                            document.getElementById('textarea').remove();
+                        }
                     } else {
                         del.readyToDelete = true;
-                        del.style.color = 'var(--red-accent-color)';
+                        del.style.backgroundColor = 'var(--red-accent-color)';
                     }
                 });
                 actions.append(del);

@@ -9,7 +9,8 @@ function getCursor() {
 function updateCursorPosition() {
     let rect = getCursor().getBoundingClientRect();
     document.getElementById('cursor_display').style.left = rect.left;
-    document.getElementById('cursor_display').style.top = rect.top + rect.height*0.25;
+    document.getElementById('cursor_display').style.top = rect.top;
+    document.getElementById('cursor_display').style.height = rect.height;
 }
 function clearSelection() {
     let selection = Array.from(document.getElementsByClassName('selected'));

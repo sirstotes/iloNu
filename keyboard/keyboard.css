@@ -34,14 +34,19 @@ cursor {
     vertical-align: middle;
     display: inline-block;
     width: 0;
-    height: 1em;
+    height: 1lh;
     font-family: 'Courier New', Courier, monospace;
 }
 @keyframes blink {
-    0%, 100% {
-        display: none;
-    }
-    50% {
-        display: inline-block;
-    }
+    0%   { display: block; }
+    49%  { display: block; }
+    50%  { display: none; }
+    100% { display: none; }
+}
+#cursor_display {
+    position:absolute;
+    width: 3px;
+    background-color: black;
+    animation: blink 1s linear infinite;
+    z-index: 5;
 }
